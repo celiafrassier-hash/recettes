@@ -52,7 +52,7 @@ export default function App() {
     <main className="page">
       <header className="entete">
         <span className="surtitre">Test du partage</span>
-        <h1>Nos recettes</h1>
+        <h1>Popote</h1>
       </header>
 
       {partage ? (
@@ -78,8 +78,8 @@ export default function App() {
         </section>
       ) : (
         <section className="carte">
-          <p>Pour tester : dans Instagram, ouvre une vidéo, touche <strong>Partager</strong>, puis choisis <strong>Recettes</strong>.</p>
-          <p className="petit">Si « Recettes » n'apparaît pas : installe d'abord l'appli sur l'écran d'accueil (menu ⋮ de Chrome → « Installer l'application »).</p>
+          <p>Pour tester : dans Instagram, ouvre une vidéo, touche <strong>Partager</strong>, puis choisis <strong>Popote</strong>.</p>
+          <p className="petit">Si « Popote » n'apparaît pas : installe d'abord l'appli sur l'écran d'accueil (menu ⋮ de Chrome → « Installer l'application »).</p>
           {message && <div className="ok" role="status">{message}</div>}
         </section>
       )}

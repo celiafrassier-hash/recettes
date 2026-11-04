@@ -1,6 +1,6 @@
-# Cahier des charges : appli recettes (Celia & Alice)
+# Cahier des charges : Popote, appli recettes (Celia & Alice)
 
-Statut : v3.1, 2026-11-03. Relu par le conseil (3 fois), décisions de Celia intégrées, maquette V1 « Sauge » validée par Celia et Alice. Prêt pour la construction.
+Statut : v3.2, 2026-11-04 (pastille d'initiale, liste des membres). v3.1 du 2026-11-03. Relu par le conseil (3 fois), décisions de Celia intégrées, maquette V1 « Sauge » validée par Celia et Alice. Prêt pour la construction.
 
 ## 1. Objectif
 
@@ -52,7 +52,8 @@ Le découpage doit gérer :
 ### 2.3 Carnet commun
 - Une seule collection pour les deux.
 - Trois types de cartes, chacune avec un petit logo : **vidéo Insta** (logo Insta), **site web** (globe), **à la main** (crayon).
-- Statut **propre à chacune** : à tester / déjà faite. Celia peut avoir une recette « à tester » alors qu'Alice l'a « déjà faite ». La carte l'indique (« Alice l'a déjà faite »). Le bouton « Je l'ai faite » de la fiche change le statut de celle qui est connectée.
+- Chaque carte porte aussi une **pastille ronde avec l'initiale** de celle qui l'a ajoutée (C, A…), en miniature, à côté du logo de type.
+- Statut **propre à chacune** : à tester / déjà faite. Celia peut avoir une recette « à tester » alors qu'Alice l'a « déjà faite ». La carte l'indique (« Alice l'a déjà faite »). La fiche montre le statut de chaque membre (ex. « Celia : déjà faite · Alice : à tester · Lise : pas encore »). Le bouton « Je l'ai faite » de la fiche change le statut de celle qui est connectée.
 - Texte de la carte : « 5 ingrédients · 25 min », ou « Vidéo Insta · ingrédients à ajouter » / « Site web · ingrédients à ajouter » tant qu'il n'y a pas d'ingrédients.
 - Fiche recette (on touche la carte) :
   - lien vers la vidéo ou le site ;
@@ -111,7 +112,7 @@ Le découpage doit gérer :
 - **Sauvegarde automatique** chaque semaine : export JSON de toutes les recettes (sans les photos), écrit dans un dépôt GitHub **privé** réservé aux sauvegardes (séparé du dépôt public du code). Le jeton GitHub est rangé dans les secrets Supabase, jamais dans le code ; s'il expire, la page de dépannage dit comment le refaire. Le bouton « Exporter mes recettes » reste aussi.
 - **Connexion** : code à 6 chiffres par mail, **une seule fois**. La session reste ouverte des mois et se renouvelle seule ; on ne redemande jamais de code le dimanche ou au magasin.
 - **Envoi du mail** : le service de mail intégré à Supabase n'écrit qu'aux membres de l'équipe du projet, avec très peu d'envois par heure. On branche donc un service de mail gratuit (**Brevo**) dans Supabase. Le modèle de mail est modifié pour afficher le code (`{{ .Token }}`) au lieu d'un lien. À vérifier dès l'étape 1 avec la vraie adresse d'Alice.
-- **Accès réservé** : les inscriptions publiques sont fermées ; seules les adresses de Celia et d'Alice peuvent se connecter. Des règles d'accès dans la base (RLS) font que chacune ne lit et n'écrit que **son** menu, **ses** ajustements de courses et **son** statut ; le carnet est lisible et modifiable par les deux.
+- **Accès réservé** : les inscriptions publiques sont fermées ; seules les adresses de la liste des membres peuvent se connecter (au départ Celia et Alice). Ajouter une copine au carnet = ajouter son prénom et son adresse à cette liste, sans changer le code : aucun prénom n'est écrit en dur. Des règles d'accès dans la base (RLS) font que chacune ne lit et n'écrit que **son** menu, **ses** ajustements de courses et **son** statut ; le carnet est lisible et modifiable par tous les membres.
 - **Mises à jour** : quand une nouvelle version est en ligne, l'appli se met à jour seule à la réouverture (pas de vieille version coincée en cache, surtout sur iPhone).
 - L'appli doit être **installée sur l'écran d'accueil** (sinon Safari peut effacer ses données locales). La page d'installation le dit.
 - Page `docs/depannage.md` : « l'appli ne marche plus, que faire », « le code n'arrive pas », « le raccourci iPhone dit erreur », avec la phrase exacte à donner à Claude Code. Elle dit aussi qui a le compte cron-job.org (Celia).
@@ -120,7 +121,7 @@ Le découpage doit gérer :
 - Menu commun et courses communes (décision du 2026-11-03 : chacune mange de son côté ; seul le carnet est commun).
 - Lecture automatique des vidéos : **reportée à plus tard** (décision du 2026-11-03). Piste : Watch (claude-video) lancé depuis l'ordi de Celia, pour remplir les ingrédients des vidéos enregistrées.
 - Appli publiée sur l'App Store ou le Play Store
-- Partage avec d'autres personnes
+- Plusieurs carnets séparés (un autre groupe d'amies avec son propre carnet). Une nouvelle membre rejoint le carnet existant.
 - Calories et nutrition
 - Gestion de stock (seulement la croix × pour retirer un article)
 - Report des articles non achetés d'une semaine à l'autre
@@ -148,8 +149,9 @@ Le découpage doit gérer :
 **Budget : 0 €.** Seulement des offres gratuites.
 
 ## 5. Données (simplifié)
-- **recette** (commune) : type (insta / web / main), nom, mots-clés, lien, lien nettoyé (unique), portions de base, ingrédients, étapes, photo, couleur, catégories, ajoutée par.
-- **statut** (propre à chacune) : recette, personne, à tester / déjà faite.
+- **recette** (commune) : type (insta / web / main), nom, mots-clés, lien, lien nettoyé (unique), portions de base, ingrédients, étapes, photo, couleur, catégories, ajoutée par (membre).
+- **membre** : prénom, initiale, adresse mail.
+- **statut** (propre à chacune) : recette, membre, à tester / déjà faite.
 - **ingrédient** : nom (avec la marque éventuelle), quantité, unité, rayon.
 - **menu** (propre à chacune) : semaine (date du lundi), propriétaire.
 - **case de menu** : menu, jour, midi/soir, recette **ou** « plaisir », nombre de personnes (1 par défaut).
@@ -227,4 +229,4 @@ export function parseIngredients(text: string): Ingredient[] {
 7. Celia et Alice l'utilisent 6 dimanches de suite.
 
 ## 13. Questions ouvertes
-1. Nom de l'appli : à décider.
+1. Nom de l'appli : **Popote** (choisi par Celia le 2026-11-04). Logo : à choisir.

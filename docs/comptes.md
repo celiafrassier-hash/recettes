@@ -13,6 +13,11 @@ Claude Code ne peut pas créer de comptes à ta place. Voici les 3 comptes, dans
 2. Crée un projet « recettes », région Europe (Paris ou Francfort), offre **Free**.
 3. Note le mot de passe de la base dans un endroit sûr. **Ne le colle pas dans le chat.**
 
+4. Crée les tables : dans Supabase, **SQL Editor** → **New query**, colle tout `supabase/schema.sql`, puis **Run**.
+5. Ajoute les membres (à refaire pour chaque nouvelle copine) : **SQL Editor** → **New query**, puis
+   `insert into membre (prenom, initiale, email) values ('Prénom', 'P', 'adresse@mail.fr');` (adresse en minuscules) → **Run**.
+   Ne mets jamais les adresses dans le code : le dépôt est public.
+
 ## 3. Brevo (à l'étape 2 : envoi du code de connexion par mail)
 1. Va sur https://www.brevo.com, crée un compte gratuit.
 2. Claude Code te dira quoi copier dans Supabase (réglages « SMTP »). Les clés vont directement dans Supabase, jamais dans le code ni dans le chat.

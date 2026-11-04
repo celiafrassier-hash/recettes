@@ -1,6 +1,6 @@
 {
-  "name": "Nos recettes",
-  "short_name": "Recettes",
+  "name": "Popote",
+  "short_name": "Popote",
   "description": "Le carnet de recettes de Celia et Alice",
   "lang": "fr",
   "start_url": "./",
