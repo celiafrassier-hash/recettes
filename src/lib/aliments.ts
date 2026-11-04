@@ -1,4 +1,4 @@
-import { norm } from './texte';
+import { norm } from './texte.ts';
 
 export type Rayon = 'fl' | 'cr' | 'po' | 'ep' | 'su' | 'autre';
 

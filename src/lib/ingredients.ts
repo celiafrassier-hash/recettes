@@ -1,4 +1,4 @@
-import { infoAliment } from './aliments';
+import { infoAliment } from './aliments.ts';
 
 // Quantité ramenée à 1 personne, dans une unité de base (g, cl, càs, càc, pièce…). qty 0 = « sel » sans quantité.
 export type Ingredient = { name: string; qty: number; unit: string };

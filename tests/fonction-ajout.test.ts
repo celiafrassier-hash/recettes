@@ -1,9 +1,16 @@
 /// <reference types="vite/client" />
 import { expect, it } from 'vitest';
-import copie from '../supabase/functions/ajout/liens.ts?raw';
-import original from '../src/lib/liens.ts?raw';
 
-// La fonction du raccourci iPhone garde sa propre copie de liens.ts (déployée à part) : elle doit rester identique.
-it('supabase/functions/ajout/liens.ts = src/lib/liens.ts', () => {
-  expect(copie.replace(/\r\n/g, '\n')).toBe(original.replace(/\r\n/g, '\n'));
-});
+// La fonction « ajout » (raccourci iPhone + remplissage Insta) garde ses propres copies de fichiers de src/lib
+// (elle est déployée à part) : elles doivent rester identiques.
+const copies = import.meta.glob('../supabase/functions/ajout/{liens,legende,ingredients,aliments,texte}.ts', { query: '?raw', import: 'default', eager: true });
+const originaux = import.meta.glob('../src/lib/{liens,legende,ingredients,aliments,texte}.ts', { query: '?raw', import: 'default', eager: true });
+const lf = (s: unknown) => String(s).replace(/\r\n/g, '\n');
+
+it('5 copies dans supabase/functions/ajout', () => expect(Object.keys(copies)).toHaveLength(5));
+for (const [chemin, copie] of Object.entries(copies)) {
+  const nom = chemin.split('/').pop()!;
+  it(`supabase/functions/ajout/${nom} = src/lib/${nom}`, () => {
+    expect(lf(copie)).toBe(lf(originaux[`../src/lib/${nom}`]));
+  });
+}
