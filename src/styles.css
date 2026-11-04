@@ -1,0 +1,45 @@
+:root {
+  --fond: #f3f5f0;
+  --encre: #1f2a24;
+  --doux: #5b675f;
+  --trait: #d5dbd2;
+  --accent: #8e1b1e;
+  --alerte-fond: #fde8dd;
+  --alerte-texte: #5a1e04;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+button { font: inherit; }
+.page { max-width: 480px; margin: 0 auto; padding: 32px 20px 40px; display: flex; flex-direction: column; gap: 18px; }
+.entete { text-align: center; display: flex; flex-direction: column; gap: 4px; }
+.surtitre { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--doux); }
+h1, h2 { font-family: 'Bricolage Grotesque', sans-serif; margin: 0; }
+h1 { font-size: 32px; font-weight: 800; }
+h2 { font-size: 20px; font-weight: 700; }
+.carte { background: #fff; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); }
+.carte p { margin: 0; line-height: 1.45; }
+.etiquette { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--doux); }
+.lien { background: var(--fond); border-radius: 14px; padding: 12px 14px; font-size: 13px; color: var(--doux); overflow-wrap: anywhere; }
+.champ { display: flex; flex-direction: column; gap: 6px; }
+.champ span { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; }
+.champ input { height: 52px; border-radius: 14px; border: 2px solid var(--encre); padding: 0 14px; font-size: 17px; font-family: inherit; color: var(--encre); outline: none; }
+.boutons { display: flex; gap: 10px; }
+.boutons button { height: 52px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.secondaire { flex: 1; border: 1.5px solid #c9d0c6; background: #fff; color: var(--encre); }
+.principal { flex: 2; border: 0; background: var(--accent); color: #fff; }
+.alerte { background: var(--alerte-fond); color: var(--alerte-texte); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.ok { background: #dce3d6; border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.petit { font-size: 13px; color: var(--doux); }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.liste { display: flex; flex-direction: column; gap: 8px; }
+.ligne { display: flex; flex-direction: column; gap: 2px; background: #fff; border-radius: 14px; padding: 12px 14px; color: inherit; text-decoration: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .carte { animation: monte 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  @keyframes monte { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+}

@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest';
+import { afficherQty, cleLigne, listeCourses, type RecetteCourses } from '../src/lib/courses';
+import { parseIngredients } from '../src/lib/ingredients';
+
+const recettes = new Map<string, RecetteCourses>([
+  ['curry', { id: 'curry', name: 'Curry', ing: parseIngredients('600 g crevettes, 40 cl lait de coco, 2 citrons verts', 4) }],
+  ['gratin', { id: 'gratin', name: 'Gratin', ing: parseIngredients('250 g pommes de terre, 2 oignons', 1) }],
+  ['soupe', { id: 'soupe', name: 'Soupe', ing: parseIngredients('1 oignon', 1) }],
+  ['insta', { id: 'insta', name: 'Ravioles', ing: [] }],
+]);
+
+describe('liste de courses', () => {
+  it('quantités ajustées aux portions (recette pour 4, mangée 3 fois)', () => {
+    const { lignes } = listeCourses([{ recette: 'curry', personnes: 3 }], recettes);
+    const crevettes = lignes.find((l) => l.name === 'crevettes')!;
+    expect(crevettes.qty).toBe(450);
+    expect(afficherQty(crevettes.qty, crevettes.unit, crevettes.name)).toBe('450 g');
+  });
+  it('regroupe oignon / oignons', () => {
+    const { lignes } = listeCourses([{ recette: 'gratin', personnes: 1 }, { recette: 'soupe', personnes: 1 }], recettes);
+    const oignons = lignes.filter((l) => l.rayon === 'fl' && l.name.startsWith('oignon'));
+    expect(oignons).toHaveLength(1);
+    expect(oignons[0].qty).toBe(3);
+  });
+  it('case Plaisir exclue, recette sans ingrédients signalée', () => {
+    const r = listeCourses([{ recette: 'plaisir', personnes: 1 }, { recette: 'insta', personnes: 1 }], recettes);
+    expect(r.lignes).toHaveLength(0);
+    expect(r.sansIngredients).toEqual(['insta']);
+  });
+  it('coches et articles retirés gardés quand le menu change', () => {
+    const aj = { [cleLigne('crevettes', 'g')]: { coche: true }, [cleLigne('lait de coco', 'cl')]: { retire: true } };
+    const avant = listeCourses([{ recette: 'curry', personnes: 2 }], recettes, aj);
+    const apres = listeCourses([{ recette: 'curry', personnes: 4 }, { recette: 'gratin', personnes: 1 }], recettes, aj);
+    for (const r of [avant, apres]) {
+      expect(r.lignes.find((l) => l.name === 'crevettes')!.coche).toBe(true);
+      expect(r.lignes.find((l) => l.name === 'lait de coco')).toBeUndefined();
+    }
+  });
+  it('filtre sur un plat', () => {
+    const { lignes } = listeCourses([{ recette: 'curry', personnes: 1 }, { recette: 'gratin', personnes: 1 }], recettes, {}, 'gratin');
+    expect(lignes.map((l) => l.name).sort()).toEqual(['oignons', 'pommes de terre']);
+  });
+  it('affichage : kg, l, arrondi des pièces', () => {
+    expect(afficherQty(1500, 'g')).toBe('1,5 kg');
+    expect(afficherQty(150, 'cl')).toBe('1,5 l');
+    expect(afficherQty(1.5, 'pièce', 'œufs')).toBe('2');
+    expect(afficherQty(0.5, 'gousse')).toBe('1 gousse');
+    expect(afficherQty(0, '')).toBe('');
+  });
+});
