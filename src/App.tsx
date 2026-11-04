@@ -48,6 +48,9 @@ function lirePartage(): string | null | undefined {
   return extraireLien(p.get('url'), p.get('text'), p.get('title'));
 }
 
+// Le raccourci ne sert que sur iPhone/iPad (Android a Popote dans Partager). iPad récent se dit « Mac » avec écran tactile.
+const IPHONE = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 const ERREUR = 'Pas enregistré (réseau ?). Réessaie.';
 
 export default function App() {
@@ -308,7 +311,7 @@ export default function App() {
                 ))}
               </section>
               <Carnet recettes={recettes} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} />
-              <button className="lien-bouton" onClick={() => setRaccourci(true)}>Sur iPhone : le raccourci « Ajouter à Popote »</button>
+              {IPHONE && <button className="lien-bouton" onClick={() => setRaccourci(true)}>Le raccourci « Ajouter à Popote »</button>}
               <button className="lien-bouton" onClick={exporter}>Exporter mes recettes</button>
             </>
           )}
