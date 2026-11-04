@@ -15,6 +15,7 @@ export type Recette = {
   ingredients: Ingredient[];
   etapes: string;
   couleur: string | null;
+  photo: string | null; // adresse publique de la photo du plat
   categories: string[];
   ajoutee_par: string | null;
   creee_le: string;

@@ -50,9 +50,10 @@ export default function Carnet({ recettes, membres, statuts, moi, ouvrir }: Prop
           return (
             <button key={r.id} className="recette" onClick={() => ouvrir(r.id)} aria-label={`Voir la recette ${r.nom}`}>
               <span className="visuel" style={{ background: couleurDe(r) }}>
+                {r.photo && <img src={r.photo} alt="" loading="lazy" />}
                 <span className={moiFait ? 'statut fait' : 'statut'}>{moiFait ? 'Déjà faite' : 'À tester'}</span>
                 <span className="badges"><Pastille membre={membres.find((m) => m.id === r.ajoutee_par)} /><LogoType type={r.type} /></span>
-                <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>
+                {!r.photo && <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>}
               </span>
               <span className="texte">
                 <strong>{r.nom}</strong>

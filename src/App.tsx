@@ -8,6 +8,7 @@ import Fiche from './Fiche';
 import { couleurDe, type Membre, type Recette, type Statut } from './lib/carnet';
 import { cleLien, extraireLien } from './lib/liens';
 import { JOURS_LONGS, toucher, type AjLigne, type CaseLigne, type Choix, type Moment } from './lib/menu';
+import { reduire } from './lib/photo';
 import { cleSemaine, lundiDe, semaineParDefaut } from './lib/semaines';
 import { supabase } from './lib/supabase';
 import Menu from './Menu';
@@ -161,6 +162,26 @@ export default function App() {
     if (patch.ingredients?.length && demande === id) setDemande(null);
   }
 
+  // Photo du plat : réduite dans le téléphone, rangée dans le stockage « photos », l'ancienne est effacée.
+  async function photo(r: Recette, f: File | null) {
+    const ancienne = r.photo?.split('/photos/')[1];
+    if (f) {
+      let blob: Blob;
+      try {
+        blob = await reduire(f);
+      } catch {
+        return setMessage('Cette photo ne peut pas être lue. Essaie une autre.');
+      }
+      const chemin = `${r.id}/${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from('photos').upload(chemin, blob, { contentType: 'image/jpeg' });
+      if (error) return setMessage('Photo pas envoyée (réseau ?). Réessaie.');
+      await modifier(r.id, { photo: supabase.storage.from('photos').getPublicUrl(chemin).data.publicUrl });
+    } else {
+      await modifier(r.id, { photo: null });
+    }
+    if (ancienne) await supabase.storage.from('photos').remove([decodeURIComponent(ancienne)]);
+  }
+
   async function marquer(id: string, fait: boolean) {
     const ligne: Statut = { recette: id, membre: moi!.id, valeur: fait ? 'deja_faite' : 'a_tester' };
     const { error } = await supabase.from('statut').upsert(ligne);
@@ -300,6 +321,7 @@ export default function App() {
           {fiche && (
             <Fiche key={fiche.id + String(ouverte?.ingredients)} r={fiche} membres={d.membres} statuts={d.statuts} moi={moi.id} editerIngredients={ouverte?.ingredients}
               modifier={(p) => modifier(fiche.id, p)} marquer={(f) => marquer(fiche.id, f)} supprimer={() => supprimer(fiche.id)}
+              photo={(f) => photo(fiche, f)}
               mettreAuMenu={(personnes) => { setChoix({ recette: fiche.id, personnes }); setSemaine(semaineParDefaut(new Date())); setOuverte(null); setOnglet('menu'); }}
               fermer={() => setOuverte(null)} />
           )}

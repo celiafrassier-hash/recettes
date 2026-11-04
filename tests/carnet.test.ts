@@ -4,7 +4,7 @@ import { parseIngredients } from '../src/lib/ingredients';
 
 const r = (o: Partial<Recette>): Recette => ({
   id: 'x', type: 'main', nom: '', mots_cles: '', lien: null, cle_lien: null, portions: 1,
-  ingredients: [], etapes: '', couleur: null, categories: [], ajoutee_par: null, creee_le: '', ...o,
+  ingredients: [], etapes: '', couleur: null, photo: null, categories: [], ajoutee_par: null, creee_le: '', ...o,
 });
 
 describe('chercher', () => {
@@ -42,5 +42,14 @@ describe('versTexte', () => {
     const texte = versTexte(ing, 4);
     expect(texte).toBe('500 g ricotta\n2 œufs\nsel');
     expect(parseIngredients(texte, 4)).toEqual(ing);
+  });
+});
+
+describe('photo', () => {
+  it('réduite à 1000 px en gardant les proportions, jamais agrandie', async () => {
+    const { taille } = await import('../src/lib/photo');
+    expect(taille(4000, 3000)).toEqual({ l: 1000, h: 750 });
+    expect(taille(3000, 4000)).toEqual({ l: 750, h: 1000 });
+    expect(taille(800, 600)).toEqual({ l: 800, h: 600 });
   });
 });

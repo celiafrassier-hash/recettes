@@ -11,16 +11,26 @@ type Props = {
   marquer: (fait: boolean) => Promise<void>;
   supprimer: () => Promise<void>;
   mettreAuMenu: (personnes: number) => void;
+  photo: (f: File | null) => Promise<void>; // null = retirer
   editerIngredients?: boolean; // ouvre directement le champ (depuis Menu ou Courses)
   fermer: () => void;
 };
 
-export default function Fiche({ r, membres, statuts, moi, modifier, marquer, supprimer, mettreAuMenu, editerIngredients, fermer }: Props) {
+export default function Fiche({ r, membres, statuts, moi, modifier, marquer, supprimer, mettreAuMenu, photo, editerIngredients, fermer }: Props) {
   const [pers, setPers] = useState(r.portions);
   const [edIng, setEdIng] = useState<string | null>(editerIngredients ? versTexte(r.ingredients, r.portions) : null);
   const [edEtapes, setEdEtapes] = useState<string | null>(null);
   const [edNom, setEdNom] = useState<{ nom: string; mots: string } | null>(null);
   const [confirme, setConfirme] = useState(false);
+  const [envoi, setEnvoi] = useState(false);
+  const choisi = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    setEnvoi(true);
+    await photo(f);
+    setEnvoi(false);
+  };
   const fait = (m: string) => statuts.some((s) => s.recette === r.id && s.membre === m && s.valeur === 'deja_faite');
   const auteur = membres.find((m) => m.id === r.ajoutee_par);
   const etapes = r.etapes.split('\n').map((s) => s.trim()).filter(Boolean);
@@ -28,9 +38,9 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   return (
     <div className="voile" onClick={fermer}>
       <div role="dialog" aria-label={r.nom} className="feuille fiche" onClick={(e) => e.stopPropagation()}>
-        <div className="haut" style={{ background: couleurDe(r) }}>
+        <div className={r.photo ? 'haut avec-photo' : 'haut'} style={{ background: couleurDe(r) }}>
+          {r.photo ? <img src={r.photo} alt={`Photo : ${r.nom}`} /> : <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>}
           <span className="badges"><Pastille membre={auteur} /><LogoType type={r.type} /></span>
-          <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>
           <button className="fermer" aria-label="Fermer" onClick={fermer}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
@@ -53,6 +63,24 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
               </>
             )}
           </div>
+
+          <div className="photo-boutons">
+            {envoi ? <span className="petit">Envoi de la photo…</span> : (
+              <>
+                <label className="secondaire">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+                  Prendre une photo
+                  <input type="file" accept="image/*" capture="environment" onChange={choisi} />
+                </label>
+                <label className="secondaire">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>
+                  Choisir dans la galerie
+                  <input type="file" accept="image/*" onChange={choisi} />
+                </label>
+              </>
+            )}
+          </div>
+          {r.photo && !envoi && <button className="lien-bouton gauche" onClick={() => photo(null)}>Retirer la photo</button>}
 
           {r.lien && (
             <a className="sombre" href={r.lien} target="_blank" rel="noreferrer">{r.type === 'insta' ? 'Voir la vidéo sur Instagram' : 'Voir la recette sur le site'}</a>
