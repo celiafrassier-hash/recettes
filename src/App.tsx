@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import Connexion from './Connexion';
+import { supabase } from './lib/supabase';
 import { cleLien, extraireLien } from './lib/liens';
 
 // Étape 1 du cahier des charges : tester le partage depuis Insta avant tout le reste.
@@ -26,6 +29,20 @@ export default function App() {
   const [motsCles, setMotsCles] = useState('');
   const [essais, setEssais] = useState(lireEssais);
   const [message, setMessage] = useState('');
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [prenom, setPrenom] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!session) return setPrenom(null);
+    supabase.from('membre').select('prenom').eq('email', session.user.email!.toLowerCase()).maybeSingle()
+      .then(({ data }) => setPrenom(data?.prenom ?? ''));
+  }, [session]);
 
   function enregistrer() {
     if (!partage?.lien) return;
@@ -53,7 +70,12 @@ export default function App() {
       <header className="entete">
         <span className="surtitre">Test du partage</span>
         <h1>Popote</h1>
+        {prenom && <span className="petit">Bonjour {prenom}</span>}
       </header>
+
+      {session === undefined ? null : !session ? <Connexion /> : prenom === '' ? (
+        <section className="carte"><div className="alerte" role="alert">Ton adresse n’est pas dans la liste des membres. Demande à Celia de l’ajouter.</div></section>
+      ) : (<>
 
       {partage ? (
         <section className="carte" aria-label="Ajouter depuis Instagram">
@@ -93,6 +115,7 @@ export default function App() {
           </a>
         ))}
       </section>
+      </>)}
     </main>
   );
 }
