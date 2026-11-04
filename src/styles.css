@@ -176,3 +176,6 @@ button:disabled { opacity: 0.6; }
 .photo-boutons label { flex: 1; min-height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer; position: relative; text-align: center; padding: 4px 8px; }
 .photo-boutons input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .badges, .statut, .fermer { z-index: 1; }
+.crayon { position: absolute; right: 14px; bottom: 14px; z-index: 1; width: 44px; height: 44px; border-radius: 22px; border: 0; background: #fff; color: var(--encre); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.photo-boutons.menu-photo { flex-wrap: wrap; background: #eef1ec; border-radius: 16px; padding: 10px; }
+.menu-photo .boutons { width: 100%; justify-content: space-between; }
