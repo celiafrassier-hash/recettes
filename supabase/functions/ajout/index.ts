@@ -18,7 +18,8 @@ Deno.serve(async (req) => {
   const jeton = String(corps.jeton ?? '').trim();
   const mots = String(corps.mots ?? '').trim().slice(0, 120);
 
-  const { data: j } = jeton ? await db.from('jeton').select('membre').eq('valeur', jeton).maybeSingle() : { data: null };
+  const { data: j, error: e } = await db.from('jeton').select('membre').eq('valeur', jeton || '-').maybeSingle();
+  if (e) return reponse('Popote : la fonction n’a pas accès à la base (clé serveur). Voir docs/raccourci-iphone.md.', 500);
   if (!j) return reponse('Popote : jeton faux ou effacé. Ouvre Popote, puis « Raccourci iPhone », et recopie le jeton dans le raccourci.', 401);
 
   const lien = extraireLien(String(corps.lien ?? ''));

@@ -20,5 +20,10 @@ end $$;
 revoke execute on function mon_jeton() from anon, public;
 grant execute on function mon_jeton() to authenticated;
 
+-- La fonction « ajout » utilise la clé serveur (rôle service_role) : elle a besoin de ces droits,
+-- car les nouvelles tables ne sont ouvertes à personne par défaut (réglage choisi à la création du projet).
+grant select on jeton to service_role;
+grant select, insert on recette to service_role;
+
 -- Jeton perdu ou montré à quelqu'un : « delete from jeton where membre = (select id from membre where prenom = 'Alice'); »
 -- puis rouvrir Popote > Raccourci iPhone pour en avoir un nouveau.
