@@ -22,7 +22,7 @@ export type Recette = {
 };
 export type Statut = { recette: string; membre: string; valeur: 'a_tester' | 'deja_faite' };
 
-export const CATEGORIES = ['Poulet', 'Viande rouge', 'Poisson', 'Légumes', 'Pâtes & riz', 'Végé', 'Salade', 'Soupe', 'Dessert', 'Petit-déj'];
+export const CATEGORIES = ['Poulet', 'Viande rouge', 'Poisson', 'Légumes', 'Pâtes & riz', 'Végé', 'Salade', 'Asiatique', 'Soupe', 'Dessert', 'Petit-déj'];
 const COULEURS = ['#CFE3D4', '#BFDCEB', '#F6E7C8', '#F4E1A6', '#F2C6D6', '#F6C9B8', '#FFF1E6'];
 
 // Couleur de la carte : choisie une fois pour toutes à partir de l'identifiant.
