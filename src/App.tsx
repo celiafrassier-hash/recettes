@@ -242,6 +242,16 @@ export default function App() {
     setMessage('Ajoutée au carnet ✓');
   }
 
+  // Copie de secours du carnet, en fichier, à garder où on veut (en plus de la sauvegarde du dimanche).
+  function exporter() {
+    const blob = new Blob([JSON.stringify({ date: cleSemaine(new Date()), recettes, statuts: d!.statuts }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `popote-recettes-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
   function changerSemaine(n: number) {
     const s = new Date(semaine);
     s.setDate(s.getDate() + 7 * n);
@@ -299,6 +309,7 @@ export default function App() {
               </section>
               <Carnet recettes={recettes} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} />
               <button className="lien-bouton" onClick={() => setRaccourci(true)}>Sur iPhone : le raccourci « Ajouter à Popote »</button>
+              <button className="lien-bouton" onClick={exporter}>Exporter mes recettes</button>
             </>
           )}
           {onglet === 'menu' && (
