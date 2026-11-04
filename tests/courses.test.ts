@@ -40,6 +40,16 @@ describe('liste de courses', () => {
     const { lignes } = listeCourses([{ recette: 'curry', personnes: 1 }, { recette: 'gratin', personnes: 1 }], recettes, {}, 'gratin');
     expect(lignes.map((l) => l.name).sort()).toEqual(['oignons', 'pommes de terre']);
   });
+  it('sel, poivre et huile jamais dans la liste', () => {
+    const m = new Map([['p', { id: 'p', name: 'Pâtes', ing: parseIngredients('200 g pâtes, sel, poivre, 2 c. à soupe huile d’olive, 1 c. à soupe vinaigre', 1) }]]);
+    expect(listeCourses([{ recette: 'p', personnes: 1 }], m).lignes.map((l) => l.name)).toEqual(['pâtes', 'vinaigre']);
+  });
+  it('article ajouté à la main : gardé, corrigeable, retirable', () => {
+    const aj = { [cleLigne('pain', 'pièce')]: { ajoute: true, nom: 'pain', unite: 'pièce', qty: 2 } };
+    const { lignes } = listeCourses([], recettes, aj);
+    expect(lignes).toEqual([{ cle: cleLigne('pain', 'pièce'), name: 'pain', qty: 2, unit: 'pièce', rayon: 'ep', coche: false }]);
+    expect(listeCourses([], recettes, { [cleLigne('pain', 'pièce')]: { ...aj[cleLigne('pain', 'pièce')], retire: true } }).lignes).toHaveLength(0);
+  });
   it('affichage : kg, l, arrondi des pièces', () => {
     expect(afficherQty(1500, 'g')).toBe('1,5 kg');
     expect(afficherQty(150, 'cl')).toBe('1,5 l');

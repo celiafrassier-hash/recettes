@@ -10,12 +10,14 @@ type Props = {
   modifier: (patch: Partial<Recette>) => Promise<void>;
   marquer: (fait: boolean) => Promise<void>;
   supprimer: () => Promise<void>;
+  mettreAuMenu: (personnes: number) => void;
+  editerIngredients?: boolean; // ouvre directement le champ (depuis Menu ou Courses)
   fermer: () => void;
 };
 
-export default function Fiche({ r, membres, statuts, moi, modifier, marquer, supprimer, fermer }: Props) {
+export default function Fiche({ r, membres, statuts, moi, modifier, marquer, supprimer, mettreAuMenu, editerIngredients, fermer }: Props) {
   const [pers, setPers] = useState(r.portions);
-  const [edIng, setEdIng] = useState<string | null>(null);
+  const [edIng, setEdIng] = useState<string | null>(editerIngredients ? versTexte(r.ingredients, r.portions) : null);
   const [edEtapes, setEdEtapes] = useState<string | null>(null);
   const [edNom, setEdNom] = useState<{ nom: string; mots: string } | null>(null);
   const [confirme, setConfirme] = useState(false);
@@ -105,9 +107,12 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
             )}
           </section>
 
-          <button className={fait(moi) ? 'principal plein' : 'secondaire plein'} aria-pressed={fait(moi)} onClick={() => marquer(!fait(moi))}>
-            {fait(moi) ? 'Déjà faite ✓' : 'Je l’ai faite'}
-          </button>
+          <div className="boutons">
+            <button className={fait(moi) ? 'principal fait' : 'secondaire'} aria-pressed={fait(moi)} onClick={() => marquer(!fait(moi))}>
+              {fait(moi) ? 'Déjà faite ✓' : 'Je l’ai faite'}
+            </button>
+            <button className="principal" onClick={() => mettreAuMenu(pers === r.portions ? 1 : pers)}>Mettre au menu</button>
+          </div>
 
           {confirme ? (
             <div role="alertdialog" className="alerte confirme">

@@ -6,7 +6,12 @@ export type RecetteCourses = { id: string; name: string; ing: Ingredient[] };
 // Une case de menu : une recette (ou « plaisir ») pour n personnes.
 export type CaseMenu = { recette: string | 'plaisir'; personnes: number };
 // Ce que l'utilisatrice a fait sur une ligne ; jamais écrasé quand le menu change.
-export type Ajustement = { coche?: boolean; retire?: boolean; qty?: number };
+// `ajoute` + nom/unite : article ajouté à la main (pas issu d'une recette).
+export type Ajustement = { coche?: boolean; retire?: boolean; qty?: number | null; ajoute?: boolean; nom?: string | null; unite?: string | null };
+
+// Jamais dans la liste : on en a presque toujours (une phrase le rappelle sous la liste).
+export const BASIQUES = ['sel', 'poivre', 'huile'];
+const basique = (name: string) => BASIQUES.some((b) => (' ' + norm(name) + ' ').startsWith(' ' + b + ' ')) && !/vinaigre|sesame/.test(norm(name));
 
 export type Ligne = { cle: string; name: string; qty: number; unit: string; rayon: Rayon; coche: boolean };
 
@@ -36,10 +41,16 @@ export function listeCourses(
     if (!r) continue;
     if (!r.ing.length) sansIngredients.push(id);
     for (const i of r.ing) {
+      if (basique(i.name)) continue;
       const cle = cleLigne(i.name, i.unit);
       const l = lignes.get(cle) ?? { cle, name: i.name, qty: 0, unit: i.unit, rayon: rayonDe(i.name), coche: false };
       l.qty += i.qty * n;
       lignes.set(cle, l);
+    }
+  }
+  if (!seulement) {
+    for (const [cle, a] of Object.entries(ajustements)) {
+      if (a.ajoute && a.nom && !lignes.has(cle)) lignes.set(cle, { cle, name: a.nom, qty: 0, unit: a.unite ?? '', rayon: rayonDe(a.nom), coche: false });
     }
   }
   const out: Ligne[] = [];

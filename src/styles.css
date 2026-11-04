@@ -68,7 +68,61 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .recette strong { font-size: 14px; line-height: 1.25; font-weight: 600; }
 .note { font-size: 12px; font-weight: 600; color: #2f6b4f; }
 .barre { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; width: min(456px, calc(100% - 24px)); height: 72px; background: var(--encre); border-radius: 26px; display: flex; align-items: center; justify-content: space-around; z-index: 5; }
-.onglet { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; font-size: 11px; font-weight: 600; }
+.onglet { width: 72px; height: 56px; border: 0; background: transparent; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #9aa596; font-size: 11px; font-weight: 600; }
+.onglet.actif { color: #fff; }
+
+/* Aujourd'hui, Menu, Courses */
+.aujourdhui { background: var(--encre); color: #fff; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.aujourdhui .etiquette { color: #c9d3cb; }
+.aujourdhui button { display: flex; align-items: center; gap: 12px; min-height: 48px; border: 0; border-radius: 14px; padding: 6px 12px 6px 6px; background: rgba(255, 255, 255, 0.08); color: #fff; cursor: pointer; text-align: left; font: inherit; }
+.aujourdhui button > span:last-child { display: flex; flex-direction: column; gap: 1px; }
+.pave { flex: none; width: 40px; height: 40px; border-radius: 12px; }
+.quand { font-size: 12px; color: #c9d3cb; font-weight: 600; }
+.quoi { font-size: 15px; font-weight: 600; }
+.menu, .courses { display: flex; flex-direction: column; gap: 14px; }
+.semaine { display: flex; align-items: center; justify-content: space-between; background: #fff; border-radius: 14px; padding: 4px; }
+.semaine button { width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; cursor: pointer; font-size: 22px; color: var(--encre); }
+.semaine > span { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 15px; }
+.demande { display: flex; flex-direction: column; gap: 10px; }
+.choix-recette { display: flex; flex-direction: column; gap: 8px; }
+.pastilles { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; }
+.pastilles button { flex: none; height: 40px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; border: 1.5px solid var(--trait); background: #fff; color: var(--encre); }
+.pastilles button[aria-pressed="true"] { border-color: var(--encre); border-width: 2px; }
+.grille-menu { display: grid; grid-template-columns: 44px repeat(2, minmax(0, 1fr)); gap: 6px; }
+.jour { display: contents; }
+.nom-jour { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 15px; display: flex; align-items: center; }
+.centre { text-align: center; font-weight: 600; }
+.case { min-height: 52px; border-radius: 14px; cursor: pointer; padding: 6px 8px; font-size: 12px; font-weight: 600; text-align: left; line-height: 1.2; border: 1.5px dashed #c9d0c6; background: transparent; color: var(--encre); font-family: inherit; overflow-wrap: anywhere; }
+.case.pleine { border: 0; }
+.case:disabled { opacity: 1; cursor: default; }
+.plats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.plat { flex: none; width: 112px; padding: 0; text-align: left; cursor: pointer; font: inherit; color: var(--encre); border-radius: 16px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); border: 2px solid transparent; display: flex; flex-direction: column; }
+.plat[aria-pressed="true"] { border-color: var(--encre); }
+.plat.pale { opacity: 0.5; }
+.plat > span:first-child { height: 40px; }
+.plat strong { font-size: 12px; line-height: 1.2; padding: 8px 10px 0; }
+.plat .petit { font-size: 11px; padding: 2px 10px 8px; }
+.rayon { display: flex; flex-direction: column; gap: 6px; }
+.articles { background: #fff; border-radius: 16px; box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); }
+.article { display: flex; align-items: center; border-bottom: 1px solid #eef1ec; }
+.article:last-child { border-bottom: 0; }
+.cocher { flex: 1; min-width: 0; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 6px 0 14px; border: 0; background: transparent; cursor: pointer; text-align: left; color: var(--encre); font: inherit; }
+.case-a-cocher { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid #9aa596; display: flex; align-items: center; justify-content: center; }
+.coche .case-a-cocher { background: #2f6b4f; border-color: #2f6b4f; }
+.cocher .nom { flex: 1; font-size: 15px; font-weight: 500; }
+.coche .nom { text-decoration: line-through; opacity: 0.5; }
+.qty { flex: none; min-height: 44px; min-width: 44px; border: 0; background: transparent; font: inherit; font-size: 14px; color: var(--doux); font-weight: 600; cursor: pointer; text-align: right; }
+input.qty { width: 90px; border: 1.5px solid var(--encre); border-radius: 10px; padding: 0 8px; color: var(--encre); }
+.retirer { flex: none; width: 44px; height: 44px; margin-right: 4px; border: 0; border-radius: 22px; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.ajout-article { display: flex; gap: 8px; }
+.ajout-article input { flex: 1; min-width: 0; height: 48px; border-radius: 14px; border: 1.5px solid #c9d0c6; padding: 0 14px; font-size: 16px; font-family: inherit; background: #fff; }
+.ajout-article button { width: 48px; height: 48px; border-radius: 14px; font-size: 22px; font-weight: 700; cursor: pointer; flex: none; }
+.souligne { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline; font-weight: 700; cursor: pointer; }
+.principal.fait { background: var(--encre); }
+@media (prefers-reduced-motion: no-preference) {
+  .pop { animation: pop 0.25s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  @keyframes pop { from { transform: scale(0.4); } to { transform: none; } }
+}
 .plus { width: 56px; height: 56px; border-radius: 20px; border: 0; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .voile { position: fixed; inset: 0; background: rgba(31, 42, 36, 0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
 .feuille { width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; background: #fff; border-radius: 28px 28px 0 0; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
