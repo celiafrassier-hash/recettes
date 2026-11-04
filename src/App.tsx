@@ -11,6 +11,7 @@ import { JOURS_LONGS, toucher, type AjLigne, type CaseLigne, type Choix, type Mo
 import { cleSemaine, lundiDe, semaineParDefaut } from './lib/semaines';
 import { supabase } from './lib/supabase';
 import Menu from './Menu';
+import Raccourci from './Raccourci';
 
 type Onglet = 'carnet' | 'menu' | 'courses';
 type Donnees = { email: string; membres: (Membre & { email: string })[]; recettes: Recette[]; statuts: Statut[]; cases: CaseLigne[]; ajustements: AjLigne[] };
@@ -61,6 +62,7 @@ export default function App() {
     return lien === undefined ? null : { lien };
   });
   const [message, setMessage] = useState('');
+  const [raccourci, setRaccourci] = useState(false);
   const [essais, setEssais] = useState<Essai[]>(() => lire(STOCK, []));
   const enCours = useRef(false);
 
@@ -275,6 +277,7 @@ export default function App() {
                 ))}
               </section>
               <Carnet recettes={recettes} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} />
+              <button className="lien-bouton" onClick={() => setRaccourci(true)}>Sur iPhone : le raccourci « Ajouter à Popote »</button>
             </>
           )}
           {onglet === 'menu' && (
@@ -300,6 +303,7 @@ export default function App() {
               mettreAuMenu={(personnes) => { setChoix({ recette: fiche.id, personnes }); setSemaine(semaineParDefaut(new Date())); setOuverte(null); setOnglet('menu'); }}
               fermer={() => setOuverte(null)} />
           )}
+          {raccourci && <Raccourci fermer={() => setRaccourci(false)} />}
           {ajout && <Ajout lienPartage={ajout.lien} ajouter={ajouter} fermer={() => setAjout(null)} />}
         </>
       ) : null}
