@@ -50,6 +50,8 @@ Voir le tableau en bas de `docs/raccourci-iphone.md`.
 Chaque dimanche, un fichier `sauvegardes/AAAA-MM-JJ.json` apparaît dans le dépôt GitHub **privé** `popote-sauvegardes`.
 - Plus de nouveau fichier : sur cron-job.org, ouvre la tâche « Popote veille », puis **History**, et lis la dernière réponse.
   - « sauvegarde refusée par GitHub (401) » : le jeton GitHub a expiré. Sur GitHub, **Settings**, puis **Developer settings**, puis **Fine-grained tokens**, puis **Regenerate**. Colle le nouveau jeton dans Supabase : **Edge Functions**, puis **Secrets**, `GITHUB_TOKEN`.
+  - « 400 Bad Request » : le mot de passe `VEILLE_CLE` contient un caractère spécial (espace, accent, `#`, `%`, `&`…). Mets-en un fait seulement de lettres et de chiffres, à la fois dans Supabase (Secrets) et dans l'URL cron-job.org.
+  - « refusé » (401) : le mot de passe de l'URL n'est pas exactement celui de `VEILLE_CLE`.
 - Le bouton **Exporter mes recettes**, en bas du carnet, télécharge aussi une copie à tout moment.
 
 > Claude Code : « La sauvegarde Popote du dimanche ne marche plus, cron-job.org dit : <copie le message>. »
