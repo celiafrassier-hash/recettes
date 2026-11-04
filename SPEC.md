@@ -65,7 +65,7 @@ Le découpage doit gérer :
   - **supprimer la recette**, avec confirmation. Si elle est dans un menu, les cases concernées se vident et l'appli le dit.
 - Aucune miniature Insta (impossible sans passer par Facebook). Le visuel vient d'une couleur choisie automatiquement, ou d'une **photo du plat** prise avec « Ajouter une photo ». Plus tard (v2, avec Watch) : une image tirée de la vidéo.
 - En haut du carnet, un bloc **« Aujourd'hui · <jour> »** : « Ce midi » et « Ce soir » d'après **mon** menu. Un tap ouvre la recette ; si rien n'est prévu (ou case Plaisir), il ouvre le menu.
-- Sous la recherche, des pastilles de **catégories** : Poulet, Viande, Poisson, Légumes, Pâtes & riz, Végé, Salade, Soupe, Dessert, Petit-déj. Pastilles neutres (gris-vert), en bordeaux quand elles sont choisies. La catégorie se **choisit en 1 tap** sur la fiche (facultatif, plusieurs possibles). Pas de déduction automatique en v1 : la plupart des vidéos Insta n'ont pas d'ingrédients au départ.
+- Sous la recherche, des pastilles de **catégories** : Poulet, Viande rouge, Poisson, Légumes, Pâtes & riz, Végé, Salade, Soupe, Dessert, Petit-déj. Pastilles neutres (gris-vert), en bordeaux quand elles sont choisies. La catégorie se **choisit en 1 tap** sur la fiche (facultatif, plusieurs possibles). Pas de déduction automatique en v1 : la plupart des vidéos Insta n'ont pas d'ingrédients au départ.
 - Photo du plat : réduite dans le téléphone avant l'envoi (environ 1000 px, moins de 300 Ko) pour rester dans le stockage gratuit.
 - Animations douces en CSS : fiche qui monte depuis le bas, cartes qui apparaissent en glissant, petit « pop » quand on coche. Coupées si le téléphone demande moins d'animations. GSAP seulement après la v1.
 

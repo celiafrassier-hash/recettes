@@ -51,7 +51,7 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .carnet { display: flex; flex-direction: column; gap: 14px; }
 .recherche { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 16px; padding: 0 16px; height: 52px; color: var(--doux); box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); }
 .recherche input { border: 0; outline: none; flex: 1; font-size: 16px; background: transparent; color: var(--encre); font-family: inherit; min-width: 0; }
-.categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: thin; }
 .categories.enveloppe { flex-wrap: wrap; overflow: visible; }
 .categories button { flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; cursor: pointer; background: #dce3d6; color: var(--encre); font-size: 14px; font-weight: 600; }
 .categories button[aria-pressed="true"] { background: var(--accent); color: #fff; }
@@ -85,7 +85,7 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .semaine > span { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 15px; }
 .demande { display: flex; flex-direction: column; gap: 10px; }
 .choix-recette { display: flex; flex-direction: column; gap: 8px; }
-.pastilles { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; }
+.pastilles { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: thin; }
 .pastilles button { flex: none; height: 40px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; border: 1.5px solid var(--trait); background: #fff; color: var(--encre); }
 .pastilles button[aria-pressed="true"] { border-color: var(--encre); border-width: 2px; }
 .grille-menu { display: grid; grid-template-columns: 44px repeat(2, minmax(0, 1fr)); gap: 6px; }
