@@ -1,0 +1,68 @@
+import { useState } from 'react';
+import { CATEGORIES, chercher, couleurDe, resume, type Membre, type Recette, type Statut } from './lib/carnet';
+
+export function LogoType({ type }: { type: Recette['type'] }) {
+  const label = { insta: 'Vidéo Instagram', web: "Recette d'un site web", main: 'Recette écrite à la main' }[type];
+  return (
+    <span className="logo-type" role="img" aria-label={label}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {type === 'insta' && <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.6" /></>}
+        {type === 'web' && <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18" /></>}
+        {type === 'main' && <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></>}
+      </svg>
+    </span>
+  );
+}
+
+export function Pastille({ membre }: { membre?: Membre }) {
+  if (!membre) return null;
+  return <span className="pastille" role="img" aria-label={`Ajoutée par ${membre.prenom}`}>{membre.initiale}</span>;
+}
+
+type Props = { recettes: Recette[]; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void };
+
+export default function Carnet({ recettes, membres, statuts, moi, ouvrir }: Props) {
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('');
+  const liste = chercher(recettes, q, cat);
+  const fait = (r: string, m: string) => statuts.some((s) => s.recette === r && s.membre === m && s.valeur === 'deja_faite');
+
+  return (
+    <div className="carnet">
+      <label className="recherche">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+        <span className="cache">Rechercher une recette</span>
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="crevettes, ravioles, gratin…" />
+      </label>
+      <div className="categories">
+        {CATEGORIES.map((c) => (
+          <button key={c} aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
+        ))}
+      </div>
+      <div className="petit">
+        {recettes.length === 0 ? 'Le carnet est vide : touche + pour ajouter une recette, ou partage une vidéo depuis Instagram.'
+          : `${liste.length} recette${liste.length > 1 ? 's' : ''}${q || cat ? ' trouvée' + (liste.length > 1 ? 's' : '') : ''}`}
+      </div>
+      <div className="grille">
+        {liste.map((r) => {
+          const moiFait = fait(r.id, moi);
+          const autres = membres.filter((m) => m.id !== moi && fait(r.id, m.id)).map((m) => m.prenom);
+          return (
+            <button key={r.id} className="recette" onClick={() => ouvrir(r.id)} aria-label={`Voir la recette ${r.nom}`}>
+              <span className="visuel" style={{ background: couleurDe(r) }}>
+                <span className={moiFait ? 'statut fait' : 'statut'}>{moiFait ? 'Déjà faite' : 'À tester'}</span>
+                <span className="badges"><Pastille membre={membres.find((m) => m.id === r.ajoutee_par)} /><LogoType type={r.type} /></span>
+                <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>
+              </span>
+              <span className="texte">
+                <strong>{r.nom}</strong>
+                <span className="petit">{resume(r)}</span>
+                {!moiFait && autres.length > 0 && <span className="note">{autres.join(' et ')} l’{autres.length > 1 ? 'ont' : 'a'} déjà faite</span>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

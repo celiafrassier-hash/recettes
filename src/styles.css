@@ -40,6 +40,76 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
 .liste { display: flex; flex-direction: column; gap: 8px; }
 .ligne { display: flex; flex-direction: column; gap: 2px; background: #fff; border-radius: 14px; padding: 12px 14px; color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .carte { animation: monte 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .carte, .feuille, .recette { animation: monte 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
   @keyframes monte { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
 }
+
+/* Carnet (maquette V1 « Sauge ») */
+.page { padding-bottom: 120px; }
+h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 700; margin: 0; }
+.cache { position: absolute; left: -9999px; }
+.carnet { display: flex; flex-direction: column; gap: 14px; }
+.recherche { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 16px; padding: 0 16px; height: 52px; color: var(--doux); box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); }
+.recherche input { border: 0; outline: none; flex: 1; font-size: 16px; background: transparent; color: var(--encre); font-family: inherit; min-width: 0; }
+.categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.categories.enveloppe { flex-wrap: wrap; overflow: visible; }
+.categories button { flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; cursor: pointer; background: #dce3d6; color: var(--encre); font-size: 14px; font-weight: 600; }
+.categories button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.recette { border: 0; padding: 0; text-align: left; cursor: pointer; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); display: flex; flex-direction: column; color: var(--encre); font: inherit; }
+.visuel { height: 104px; position: relative; display: flex; align-items: flex-end; padding: 10px; }
+.initiale { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 44px; line-height: 1; color: rgba(31, 42, 36, 0.85); }
+.statut { position: absolute; top: 10px; left: 10px; font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 10px; background: #fff; }
+.statut.fait { background: var(--encre); color: #fff; }
+.badges { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px; }
+.logo-type, .pastille { width: 26px; height: 26px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; color: var(--encre); }
+.pastille { border-radius: 13px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; }
+.recette .texte { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+.recette strong { font-size: 14px; line-height: 1.25; font-weight: 600; }
+.note { font-size: 12px; font-weight: 600; color: #2f6b4f; }
+.barre { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; width: min(456px, calc(100% - 24px)); height: 72px; background: var(--encre); border-radius: 26px; display: flex; align-items: center; justify-content: space-around; z-index: 5; }
+.onglet { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; font-size: 11px; font-weight: 600; }
+.plus { width: 56px; height: 56px; border-radius: 20px; border: 0; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.voile { position: fixed; inset: 0; background: rgba(31, 42, 36, 0.45); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.feuille { width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto; background: #fff; border-radius: 28px 28px 0 0; padding: 20px 20px 32px; display: flex; flex-direction: column; gap: 14px; }
+.feuille form { display: flex; flex-direction: column; gap: 14px; }
+.feuille.fiche { padding: 0; gap: 0; }
+.poignee { width: 40px; height: 5px; border-radius: 3px; background: var(--trait); align-self: center; }
+.choix { display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 12px 16px; border-radius: 16px; border: 1.5px solid var(--trait); background: #fff; cursor: pointer; text-align: left; font: inherit; color: var(--encre); }
+.choix > span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.icone { flex: none; width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+.lien-bouton { align-self: center; min-height: 44px; border: 0; background: transparent; font-size: 14px; font-weight: 600; color: var(--doux); cursor: pointer; }
+.lien-bouton.gauche { align-self: flex-start; padding: 0; text-decoration: underline; }
+.lien-bouton.rouge { color: #9a2b1e; }
+.champ textarea { border-radius: 14px; border: 2px solid var(--encre); padding: 12px 14px; font-size: 16px; line-height: 1.45; font-family: inherit; color: var(--encre); resize: vertical; outline: none; }
+.ligne-titre { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.personnes { display: flex; align-items: center; gap: 4px; background: #dce3d6; border-radius: 14px; padding: 4px; }
+.personnes button { width: 44px; height: 44px; border-radius: 10px; border: 0; background: #fff; font-size: 22px; font-weight: 700; cursor: pointer; color: var(--encre); }
+.champ .personnes span, .personnes span { min-width: 64px; text-align: center; font-size: 14px; font-weight: 600; font-family: Inter, system-ui, sans-serif; }
+.apercu { display: flex; flex-direction: column; gap: 6px; }
+.puces { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce { background: #eef1ec; border-radius: 10px; padding: 5px 9px; font-size: 13px; }
+.puce.doute { background: var(--alerte-fond); }
+.doute-texte { color: var(--alerte-texte); }
+.haut { height: 160px; flex: none; position: relative; display: flex; align-items: flex-end; padding: 16px 20px; border-radius: 28px 28px 0 0; }
+.haut .initiale { font-size: 64px; }
+.haut .badges { top: 14px; right: auto; left: 14px; }
+.fermer { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 22px; border: 0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--encre); }
+.corps { padding: 18px 20px 32px; display: flex; flex-direction: column; gap: 18px; }
+.titre { display: flex; flex-direction: column; gap: 6px; }
+.titre h2 { font-size: 28px; font-weight: 800; line-height: 1.1; }
+.edition { display: flex; flex-direction: column; gap: 12px; }
+.sombre { display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 14px; background: var(--encre); color: #fff; text-decoration: none; font-weight: 700; font-size: 15px; }
+.bloc { display: flex; flex-direction: column; gap: 10px; }
+.ingredients { list-style: none; margin: 0; padding: 0; }
+.ingredients li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef1ec; font-size: 15px; }
+.ingredients li span:last-child { flex: none; color: var(--doux); font-weight: 600; }
+.etapes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.etapes li { display: flex; gap: 12px; font-size: 15px; line-height: 1.45; }
+.etapes li span { flex: none; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.pointilles { min-height: 44px; border-radius: 12px; border: 1.5px dashed #9aa596; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--encre); }
+.plein { height: 52px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.confirme { display: flex; flex-direction: column; gap: 10px; }
+.danger { flex: 1; border: 0; background: #9a2b1e; color: #fff; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 100px; background: var(--encre); color: #fff; padding: 12px 18px; border-radius: 14px; font-size: 14px; font-weight: 600; z-index: 20; }
+button:disabled { opacity: 0.6; }
