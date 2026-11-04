@@ -9,7 +9,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(req)
+    // Page : on redemande toujours au serveur (GitHub garde sinon l'ancienne 10 min). Fichiers : noms uniques, le cache suffit.
+    (req.mode === 'navigate' ? fetch(req.url, { cache: 'no-cache' }) : fetch(req))
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req.mode === 'navigate' ? './' : req, copy));
