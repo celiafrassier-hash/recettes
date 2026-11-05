@@ -208,3 +208,5 @@ button:disabled { opacity: 0.6; }
 @keyframes saute { 0%, 100% { transform: none; } 25% { transform: translateY(-10px) rotate(-8deg); } 45% { transform: none; } 60% { transform: translateY(-5px) rotate(5deg); } 75% { transform: none; } }
 @keyframes nuage { 0%, 20% { opacity: 0; transform: scale(0.4); } 40% { opacity: 0.8; } 100% { opacity: 0; transform: scale(1.4) translateY(-16px); } }
 @keyframes vapeur { 0% { stroke-dashoffset: 60; opacity: 0; transform: translateY(6px); } 30% { opacity: 0.9; } 100% { stroke-dashoffset: -60; opacity: 0; transform: translateY(-16px); } }
+.voile { transition: background 0.4s; }
+.voile.part { background: transparent; pointer-events: none; }

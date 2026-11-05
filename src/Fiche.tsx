@@ -25,16 +25,27 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   const [envoi, setEnvoi] = useState(false);
   const [menuPhoto, setMenuPhoto] = useState(false);
   // Tirer la fiche vers le bas (depuis le haut, photo ou poignée) pour la fermer, au lieu de la croix.
-  const [tire, setTire] = useState<{ y0: number; dy: number } | null>(null);
+  const [tire, setTire] = useState<{ y0: number; dy: number; t: number; v: number } | null>(null);
+  const [part, setPart] = useState(false);
+  // Fermeture : la fiche finit de descendre en douceur (0,4 s), puis disparaît.
+  const partir = () => {
+    setPart(true);
+    setTimeout(fermer, 400);
+  };
   const tirer = {
     onPointerDown: (e: React.PointerEvent) => {
       if ((e.target as HTMLElement).closest('button')) return;
       e.currentTarget.setPointerCapture(e.pointerId);
-      setTire({ y0: e.clientY, dy: 0 });
+      setTire({ y0: e.clientY, dy: 0, t: e.timeStamp, v: 0 });
     },
-    onPointerMove: (e: React.PointerEvent) => tire && setTire({ ...tire, dy: Math.max(0, e.clientY - tire.y0) }),
+    onPointerMove: (e: React.PointerEvent) => {
+      if (!tire) return;
+      const dy = Math.max(0, e.clientY - tire.y0);
+      setTire({ ...tire, dy, t: e.timeStamp, v: (dy - tire.dy) / Math.max(1, e.timeStamp - tire.t) });
+    },
+    // Lâchée assez bas, ou lancée d'un petit coup vers le bas : elle part. Sinon elle remonte.
     onPointerUp: () => {
-      if (tire && tire.dy > 90) fermer();
+      if (tire && (tire.dy > 90 || (tire.dy > 20 && tire.v > 0.5))) partir();
       setTire(null);
     },
     onPointerCancel: () => setTire(null),
@@ -53,9 +64,9 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   const etapes = r.etapes.split('\n').map((s) => s.trim()).filter(Boolean);
 
   return (
-    <div className="voile" onClick={fermer}>
+    <div className={part ? 'voile part' : 'voile'} onClick={partir}>
       <div role="dialog" aria-label={r.nom} className="feuille fiche" onClick={(e) => e.stopPropagation()}
-        style={tire ? { transform: `translateY(${tire.dy}px)`, transition: 'none' } : undefined}>
+        style={part ? { transform: 'translateY(100%)', transition: 'transform 0.4s cubic-bezier(0.3, 0, 0.2, 1)' } : tire ? { transform: `translateY(${tire.dy}px)`, transition: 'none' } : undefined}>
         <div className={r.photo ? 'haut avec-photo' : 'haut'} style={{ background: couleurDe(r) }} {...tirer}>
           <span className="poignee" aria-hidden="true" />
           {r.photo ? <img src={r.photo} alt={`Photo : ${r.nom}`} /> : <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>}
@@ -65,7 +76,7 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></svg>
             </button>
           )}
-          <button className="fermer" aria-label="Fermer" onClick={fermer}>
+          <button className="fermer" aria-label="Fermer" onClick={partir}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
