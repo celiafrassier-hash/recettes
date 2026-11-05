@@ -1,8 +1,11 @@
-// Remplit une recette Insta à partir du post : ingrédients et étapes tirés de la légende, couverture comme photo.
+// Remplit une recette à partir de son lien. Insta : ingrédients et étapes tirés de la légende, couverture comme photo.
+// Site web : la fiche « Recipe » cachée dans la page (web.ts).
 // Insta donne la légende et la couverture au robot de partage de Facebook (testé le 2026-11-04 depuis Supabase).
 // Si Insta bloque un jour, rien ne casse : la recette garde son lien et ses mots-clés.
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.117.3';
-import { decouper, decoderHtml, legendeDe } from './legende.ts';
+import { decouper, decoderHtml, legendeDe, type Decoupe } from './legende.ts';
+import { lireFicheWeb } from './web.ts';
+import { cleLien } from './liens.ts';
 
 const ROBOT = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
 const meta = (html: string, re: RegExp) => html.match(re)?.[1] ?? null;
@@ -21,6 +24,16 @@ export async function lireInsta(lien: string): Promise<{ legende: string; image:
   }
 }
 
+// Site web : un navigateur ordinaire, sinon certains sites refusent la page.
+async function lireWeb(lien: string): Promise<(Decoupe & { image: string | null }) | null> {
+  try {
+    const r = await fetch(lien, { headers: { 'user-agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36', 'accept-language': 'fr' }, signal: AbortSignal.timeout(8000) });
+    return r.ok ? lireFicheWeb(await r.text()) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Recopie la couverture dans le stockage « photos » (les adresses Insta expirent au bout de quelques jours).
 async function copierPhoto(db: SupabaseClient, id: string, image: string): Promise<string | null> {
   try {
@@ -28,7 +41,7 @@ async function copierPhoto(db: SupabaseClient, id: string, image: string): Promi
     const blob = await r.blob();
     if (!r.ok || blob.size > 500 * 1024) return null;
     const chemin = `${id}/${Date.now()}.jpg`;
-    const { error } = await db.storage.from('photos').upload(chemin, blob, { contentType: 'image/jpeg' });
+    const { error } = await db.storage.from('photos').upload(chemin, blob, { contentType: blob.type.startsWith('image/') ? blob.type : 'image/jpeg' });
     return error ? null : db.storage.from('photos').getPublicUrl(chemin).data.publicUrl;
   } catch {
     return null;
@@ -39,9 +52,10 @@ async function copierPhoto(db: SupabaseClient, id: string, image: string): Promi
 export async function remplir(db: SupabaseClient, id: string) {
   const { data: r } = await db.from('recette').select('lien, ingredients, etapes, photo').eq('id', id).maybeSingle();
   if (!r?.lien) return null;
-  const post = await lireInsta(r.lien);
+  const insta = cleLien(r.lien)?.startsWith('instagram:');
+  const post = insta ? await lireInsta(r.lien) : await lireWeb(r.lien);
   if (!post) return null;
-  const d = decouper(post.legende);
+  const d = 'legende' in post ? decouper(post.legende) : post;
   const patch: Record<string, unknown> = {};
   if (!r.ingredients?.length && d.ingredients.length) Object.assign(patch, { ingredients: d.ingredients, portions: d.portions });
   if (!r.etapes && d.etapes) patch.etapes = d.etapes;

@@ -6,8 +6,8 @@ export type Ingredient = { name: string; qty: number; unit: string };
 const UNITS: Record<string, [string, number]> = {
   kg: ['g', 1000], g: ['g', 1], gr: ['g', 1], gramme: ['g', 1],
   l: ['cl', 100], litre: ['cl', 100], dl: ['cl', 10], cl: ['cl', 1], ml: ['cl', 0.1],
-  'c. à soupe': ['càs', 1], 'c à soupe': ['càs', 1], 'cuillère à soupe': ['càs', 1], 'cuillere a soupe': ['càs', 1], càs: ['càs', 1], cas: ['càs', 1], cs: ['càs', 1],
-  'c. à café': ['càc', 1], 'c à café': ['càc', 1], 'cuillère à café': ['càc', 1], 'cuillere a cafe': ['càc', 1], càc: ['càc', 1], cac: ['càc', 1], cc: ['càc', 1],
+  'c. à soupe': ['càs', 1], 'c à soupe': ['càs', 1], 'cuillère à soupe': ['càs', 1], 'cuillere a soupe': ['càs', 1], càs: ['càs', 1], cas: ['càs', 1], cs: ['càs', 1], 'cuillères à soupe': ['càs', 1], 'c à s': ['càs', 1], 'c. à s.': ['càs', 1],
+  'c. à café': ['càc', 1], 'c à café': ['càc', 1], 'cuillère à café': ['càc', 1], 'cuillere a cafe': ['càc', 1], càc: ['càc', 1], cac: ['càc', 1], cc: ['càc', 1], 'cuillères à café': ['càc', 1], 'c à c': ['càc', 1], 'c. à c.': ['càc', 1],
   pincée: ['pincée', 1], pincee: ['pincée', 1], paquet: ['paquet', 1], sachet: ['sachet', 1], boîte: ['boîte', 1], boite: ['boîte', 1],
   gousse: ['gousse', 1], tranche: ['tranche', 1], botte: ['botte', 1], pot: ['pot', 1], verre: ['verre', 1], brin: ['brin', 1],
 };

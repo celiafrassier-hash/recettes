@@ -74,3 +74,34 @@ describe('decouper', () => {
     expect(r.etapes).toBe('Battre les oeufs');
   });
 });
+
+describe('decouper sans titre « Ingrédients »', () => {
+  it('repère la liste grâce aux quantités, le reste va dans les étapes', () => {
+    const r = decouper(`CURRY DE POIS CHICHES 🍛
+Pour 2 personnes
+1 oignon
+200 g de pois chiches
+20 cl de lait de coco
+Pour la sauce :
+1 càs de curry
+Sel, poivre
+Faire revenir l'oignon dans un peu d'huile.
+Ajouter le reste et laisser mijoter 10 min.
+#curry`);
+    expect(r.portions).toBe(2);
+    expect(r.ingredients.map((i) => i.name)).toEqual(['oignon', 'pois chiches', 'lait de coco', 'curry', 'Sel', 'poivre']);
+    expect(r.ingredients[1]).toEqual({ name: 'pois chiches', qty: 100, unit: 'g' });
+    expect(r.etapes).toBe("CURRY DE POIS CHICHES 🍛\nFaire revenir l'oignon dans un peu d'huile.\nAjouter le reste et laisser mijoter 10 min.");
+  });
+
+  it('avec « Préparation : » seulement, les ingrédients du dessus ne sont plus perdus', () => {
+    const r = decouper('Gâteau yaourt\n- 1 pot de yaourt\n- 3 oeufs\nPréparation :\n1. Mélanger le tout.\n2. Cuire 30 min.');
+    expect(r.ingredients.map((i) => i.name)).toEqual(['yaourt', 'oeufs']);
+    expect(r.etapes).toBe('1. Mélanger le tout.\n2. Cuire 30 min.');
+  });
+
+  it('étapes numérotées et durées ne sont pas des ingrédients', () => {
+    const r = decouper('Pâtes\n1. Cuire les pâtes\n2. Égoutter\n10 min de cuisson');
+    expect(r.ingredients).toEqual([]);
+  });
+});

@@ -156,15 +156,15 @@ export default function App() {
     maj((x) => ({ ...x, recettes: [data, ...x.recettes] }));
     setAjout(null);
     setMessage('Enregistrée ✓');
-    if (data.type === 'insta') remplirInsta(data.id);
+    if (data.lien) remplirDepuisLien(data);
   };
 
-  // Ingrédients, étapes et photo repris du post Insta par la fonction « ajout ». Sans réponse : la recette reste lien + mots.
-  async function remplirInsta(id: string) {
-    const { data } = await supabase.functions.invoke<Recette | null>('ajout', { body: { remplir: id } });
+  // Ingrédients, étapes et photo repris du post Insta ou du site web par la fonction « ajout ». Sans réponse : la recette reste lien + nom.
+  async function remplirDepuisLien(r: Recette) {
+    const { data } = await supabase.functions.invoke<Recette | null>('ajout', { body: { remplir: r.id } });
     if (!data) return;
-    maj((x) => ({ ...x, recettes: x.recettes.map((r) => (r.id === id ? data : r)) }));
-    setMessage('Recette reprise de la légende ✓ À relire');
+    maj((x) => ({ ...x, recettes: x.recettes.map((y) => (y.id === r.id ? data : y)) }));
+    setMessage(`Recette reprise ${r.type === 'insta' ? 'de la légende' : 'du site'} ✓ À relire`);
   }
 
   async function modifier(id: string, patch: Partial<Recette>) {

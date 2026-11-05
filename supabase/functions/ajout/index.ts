@@ -1,8 +1,8 @@
 // Fonction « ajout » : appelée par le raccourci iPhone (Partager > Ajouter à Popote), sans ouvrir l'appli.
 // Reçoit { jeton, lien, mots } en JSON et répond une phrase en clair, que le raccourci affiche.
 // Sert aussi à l'appli après un partage Android : { remplir: id } avec la connexion de la personne.
-// Dans les deux cas, la recette Insta est remplie depuis la légende du post (insta.ts).
-// À déployer dans Supabase : Edge Functions > ajout > Code, avec les 7 fichiers .ts de ce dossier, « Verify JWT » désactivé
+// Dans les deux cas, la recette est remplie depuis la légende du post Insta ou la fiche du site web (insta.ts).
+// À déployer dans Supabase : Edge Functions > ajout > Code, avec les 8 fichiers .ts de ce dossier, « Verify JWT » désactivé
 // (le raccourci n'a pas de connexion ; l'appli, elle, est vérifiée dans remplirPourMembre). Avant : lancer supabase/insta.sql.
 import { createClient } from 'npm:@supabase/supabase-js@2.117.3';
 import { remplir } from './insta.ts';
@@ -53,6 +53,6 @@ Deno.serve(async (req) => {
   const { data: n, error } = await db.from('recette').insert({ type: insta ? 'insta' : 'web', nom: mots, mots_cles: insta ? mots : '', lien, cle_lien: cle, portions: 4, ajoutee_par: j.membre }).select('id').single();
   if (error?.code === '23505') return reponse('Déjà dans le carnet');
   if (error) return reponse('Popote : pas enregistrée, réessaie dans un moment.', 500);
-  const rempli = insta && (await remplir(db, n.id));
-  return reponse(`Ajoutée au carnet ✓ « ${mots} »${rempli ? ' (recette reprise de la légende, à relire)' : ''}`);
+  const rempli = await remplir(db, n.id);
+  return reponse(`Ajoutée au carnet ✓ « ${mots} »${rempli ? ` (recette reprise ${insta ? 'de la légende' : 'du site'}, à relire)` : ''}`);
 });
