@@ -24,6 +24,21 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   const [confirme, setConfirme] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [menuPhoto, setMenuPhoto] = useState(false);
+  // Tirer la fiche vers le bas (depuis le haut, photo ou poignée) pour la fermer, au lieu de la croix.
+  const [tire, setTire] = useState<{ y0: number; dy: number } | null>(null);
+  const tirer = {
+    onPointerDown: (e: React.PointerEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setTire({ y0: e.clientY, dy: 0 });
+    },
+    onPointerMove: (e: React.PointerEvent) => tire && setTire({ ...tire, dy: Math.max(0, e.clientY - tire.y0) }),
+    onPointerUp: () => {
+      if (tire && tire.dy > 90) fermer();
+      setTire(null);
+    },
+    onPointerCancel: () => setTire(null),
+  };
   const choisi = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = '';
@@ -39,8 +54,10 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
 
   return (
     <div className="voile" onClick={fermer}>
-      <div role="dialog" aria-label={r.nom} className="feuille fiche" onClick={(e) => e.stopPropagation()}>
-        <div className={r.photo ? 'haut avec-photo' : 'haut'} style={{ background: couleurDe(r) }}>
+      <div role="dialog" aria-label={r.nom} className="feuille fiche" onClick={(e) => e.stopPropagation()}
+        style={tire ? { transform: `translateY(${tire.dy}px)`, transition: 'none' } : undefined}>
+        <div className={r.photo ? 'haut avec-photo' : 'haut'} style={{ background: couleurDe(r) }} {...tirer}>
+          <span className="poignee" aria-hidden="true" />
           {r.photo ? <img src={r.photo} alt={`Photo : ${r.nom}`} /> : <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>}
           <span className="badges"><Pastille membre={auteur} /><LogoType type={r.type} /></span>
           {r.photo && (
@@ -121,7 +138,7 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
                 <div className="ligne-titre"><h3>Ingrédients</h3>{r.ingredients.length > 0 && <Personnes n={pers} setN={setPers} />}</div>
                 {r.ingredients.length ? (
                   <ul className="ingredients">
-                    {r.ingredients.map((i, k) => <li key={k}><span>{i.name}</span><span>{afficherQty(i.qty * pers, i.unit, i.name)}</span></li>)}
+                    {r.ingredients.map((i, k) => <li key={k} style={{ animationDelay: `${Math.min(k, 12) * 60}ms` }}><span>{i.name}</span><span>{afficherQty(i.qty * pers, i.unit, i.name)}</span></li>)}
                   </ul>
                 ) : (
                   <div className="alerte">Pas encore d'ingrédients. Ajoute-les d'un trait (« 250 g ricotta, 1 paquet ravioles ») pour qu'ils aillent dans la liste de courses.</div>

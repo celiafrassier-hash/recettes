@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { RAYONS, type Rayon } from './lib/aliments';
 import { couleurDe, type Recette } from './lib/carnet';
 import { afficherQty, BASIQUES, cleLigne, listeCourses, portions, type Ajustement, type Ligne } from './lib/courses';
@@ -14,6 +14,37 @@ type Props = {
   ajouterIngredients: (id: string) => void;
 };
 
+// Petite fête quand tout est coché : des confettis tombent une fois (coupés si le téléphone demande moins d'animations).
+function Confettis() {
+  const couleurs = ['#8E1B1E', '#E8B04B', '#2F6B4F', '#3A5BA0'];
+  return (
+    <div className="confettis" aria-hidden="true">
+      {Array.from({ length: 30 }, (_, i) => (
+        <i key={i} style={{ left: `${(i * 37) % 100}%`, background: couleurs[i % 4], animationDelay: `${(i % 7) * 70}ms`, ['--x' as string]: `${((i * 53) % 80) - 40}px` }} />
+      ))}
+    </div>
+  );
+}
+
+// Article coché : il glisse doucement en bas de son rayon (on mesure les places avant et après, puis on anime l'écart).
+function useGlisse(cles: string) {
+  const ref = useRef<HTMLDivElement>(null);
+  const avant = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const els = [...(ref.current?.querySelectorAll<HTMLElement>('[data-cle]') ?? [])];
+    const apres = new Map(els.map((el) => [el.dataset.cle!, el.getBoundingClientRect().top]));
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      for (const el of els) {
+        const dy = (avant.current.get(el.dataset.cle!) ?? apres.get(el.dataset.cle!)!) - apres.get(el.dataset.cle!)!;
+        if (!dy) continue;
+        el.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 450, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+      }
+    }
+    avant.current = apres;
+  }, [cles]);
+  return ref;
+}
+
 const COULEURS_RAYON: Partial<Record<Rayon, string>> = { fl: '#2F6B4F', cr: '#3A5BA0', po: '#B83C0B', ep: '#7A5A00' };
 
 export default function Courses({ semaine, changerSemaine, cases, recettes, ajustements, ajuster, ajouterIngredients }: Props) {
@@ -26,7 +57,10 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
   const { lignes, sansIngredients } = listeCourses(menu, parId, aj, seul ?? undefined);
   const plats = [...portions(menu)].map(([id, n]) => ({ r: recettes.find((x) => x.id === id), n })).filter((p) => p.r);
   const retires = ajustements.filter((a) => a.retire);
-  const parRayon = (Object.keys(RAYONS) as Rayon[]).map((ry) => ({ ry, lignes: lignes.filter((l) => l.rayon === ry).sort((a, b) => a.name.localeCompare(b.name, 'fr')) })).filter((g) => g.lignes.length);
+  const parRayon = (Object.keys(RAYONS) as Rayon[]).map((ry) => ({ ry, lignes: lignes.filter((l) => l.rayon === ry).sort((a, b) => Number(a.coche) - Number(b.coche) || a.name.localeCompare(b.name, 'fr')) })).filter((g) => g.lignes.length);
+
+  const glisse = useGlisse(parRayon.map((g) => g.lignes.map((l) => l.cle + l.coche).join()).join());
+  const toutPris = lignes.length > 0 && lignes.every((l) => l.coche);
 
   function ajouterArticle(e: React.FormEvent) {
     e.preventDefault();
@@ -45,7 +79,8 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
   }
 
   return (
-    <div className="courses">
+    <div className="courses" ref={glisse}>
+      {toutPris && <Confettis />}
       <div className="semaine">
         <button aria-label="Semaine précédente" onClick={() => changerSemaine(-1)}>‹</button>
         <span><strong>{nomSemaine(semaine)}</strong><span className="petit">{libelleSemaine(semaine)} · par rayon</span></span>
@@ -78,7 +113,7 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
           <span className="etiquette" style={{ color: COULEURS_RAYON[ry] }}>{RAYONS[ry]}</span>
           <div className="articles">
             {lignes.map((l) => (
-              <div key={l.cle} className={l.coche ? 'article coche' : 'article'}>
+              <div key={l.cle} data-cle={l.cle} className={l.coche ? 'article coche' : 'article'}>
                 <button className="cocher" aria-pressed={l.coche} onClick={() => ajuster(l.cle, { coche: !l.coche })}>
                   <span className="case-a-cocher">{l.coche && <svg className="pop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>}</span>
                   <span className="nom">{l.name}</span>

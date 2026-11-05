@@ -179,3 +179,23 @@ button:disabled { opacity: 0.6; }
 .crayon { position: absolute; right: 14px; bottom: 14px; z-index: 1; width: 44px; height: 44px; border-radius: 22px; border: 0; background: #fff; color: var(--encre); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .photo-boutons.menu-photo { flex-wrap: wrap; background: #eef1ec; border-radius: 16px; padding: 10px; }
 .menu-photo .boutons { width: 100%; justify-content: space-between; }
+
+/* Animations (coupées si le téléphone demande moins d'animations) */
+.haut { touch-action: none; }
+.poignee { position: absolute; top: 8px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: rgba(255, 255, 255, 0.85); box-shadow: 0 0 0 0.5px rgba(31, 42, 36, 0.15); z-index: 1; }
+.feuille { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.lecture { display: flex; flex-direction: column; gap: 5px; }
+.lecture i { display: block; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #eef1eb 0, #dce3d6 50%, #eef1eb 100%) 0 0 / 300px 8px; }
+.lecture i + i { width: 65%; }
+.confettis { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 20; }
+.confettis i { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .recette.nouvelle { animation: rebond 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 0 0 2px var(--accent); }
+  @keyframes rebond { 0% { transform: translateY(-24px) scale(0.92); opacity: 0; } 60% { transform: translateY(4px) scale(1.03); opacity: 1; } 100% { transform: none; } }
+  .lecture i { animation: brille 1s linear infinite; }
+  @keyframes brille { from { background-position: -300px 0; } to { background-position: 300px 0; } }
+  .ingredients li { animation: apparait 0.35s both; }
+  @keyframes apparait { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+  .confettis i { animation: tombe 1.6s cubic-bezier(0.3, 0.6, 0.5, 1) forwards; }
+  @keyframes tombe { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(var(--x), 90vh) rotate(540deg); } }
+}

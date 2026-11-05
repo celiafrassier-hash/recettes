@@ -19,9 +19,9 @@ export function Pastille({ membre }: { membre?: Membre }) {
   return <span className="pastille" role="img" aria-label={`Ajoutée par ${membre.prenom}`}>{membre.initiale}</span>;
 }
 
-type Props = { recettes: Recette[]; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void };
+type Props = { recettes: Recette[]; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void; nouvelle?: string | null; lecture?: string | null };
 
-export default function Carnet({ recettes, membres, statuts, moi, ouvrir }: Props) {
+export default function Carnet({ recettes, membres, statuts, moi, ouvrir, nouvelle, lecture }: Props) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const liste = chercher(recettes, q, cat);
@@ -48,7 +48,7 @@ export default function Carnet({ recettes, membres, statuts, moi, ouvrir }: Prop
           const moiFait = fait(r.id, moi);
           const autres = membres.filter((m) => m.id !== moi && fait(r.id, m.id)).map((m) => m.prenom);
           return (
-            <button key={r.id} className="recette" onClick={() => ouvrir(r.id)} aria-label={`Voir la recette ${r.nom}`}>
+            <button key={r.id} className={r.id === nouvelle ? 'recette nouvelle' : 'recette'} onClick={() => ouvrir(r.id)} aria-label={`Voir la recette ${r.nom}`}>
               <span className="visuel" style={{ background: couleurDe(r) }}>
                 {r.photo && <img src={r.photo} alt="" loading="lazy" />}
                 <span className={moiFait ? 'statut fait' : 'statut'}>{moiFait ? 'Déjà faite' : 'À tester'}</span>
@@ -57,7 +57,7 @@ export default function Carnet({ recettes, membres, statuts, moi, ouvrir }: Prop
               </span>
               <span className="texte">
                 <strong>{r.nom}</strong>
-                <span className="petit">{resume(r)}</span>
+                {r.id === lecture ? <span className="lecture"><span className="petit">Lecture {r.type === 'insta' ? 'de la vidéo' : 'du site'}…</span><i /><i /></span> : <span className="petit">{resume(r)}</span>}
                 {!moiFait && autres.length > 0 && <span className="note">{autres.join(' et ')} l’{autres.length > 1 ? 'ont' : 'a'} déjà faite</span>}
               </span>
             </button>

@@ -61,6 +61,13 @@ export default function App() {
   const [choix, setChoix] = useState<Choix | null>(null);
   const [demande, setDemande] = useState<string | null>(null); // recette sans ingrédients posée au menu
   const [ouverte, setOuverte] = useState<{ id: string; ingredients?: boolean } | null>(null);
+  // Animations du carnet : rebond de la carte ajoutée ou remplie, barres pendant la lecture du lien.
+  const [nouvelle, setNouvelle] = useState<string | null>(null);
+  const [lecture, setLecture] = useState<string | null>(null);
+  const rebond = (id: string) => {
+    setNouvelle(id);
+    setTimeout(() => setNouvelle((x) => (x === id ? null : x)), 1200);
+  };
   const [ajout, setAjout] = useState<{ lien?: string | null } | null>(() => {
     const lien = lirePartage();
     return lien === undefined ? null : { lien };
@@ -156,13 +163,17 @@ export default function App() {
     maj((x) => ({ ...x, recettes: [data, ...x.recettes] }));
     setAjout(null);
     setMessage('Enregistrée ✓');
+    rebond(data.id);
     if (data.lien) remplirDepuisLien(data);
   };
 
   // Ingrédients, étapes et photo repris du post Insta ou du site web par la fonction « ajout ». Sans réponse : la recette reste lien + nom.
   async function remplirDepuisLien(r: Recette) {
-    const { data } = await supabase.functions.invoke<Recette | null>('ajout', { body: { remplir: r.id } });
+    setLecture(r.id);
+    const { data } = await supabase.functions.invoke<Recette | null>('ajout', { body: { remplir: r.id } }).catch(() => ({ data: null }));
+    setLecture(null);
     if (!data) return;
+    rebond(r.id);
     maj((x) => ({ ...x, recettes: x.recettes.map((y) => (y.id === r.id ? data : y)) }));
     setMessage(`Recette reprise ${r.type === 'insta' ? 'de la légende' : 'du site'} ✓ À relire`);
   }
@@ -319,7 +330,7 @@ export default function App() {
                   </button>
                 ))}
               </section>
-              <Carnet recettes={recettes} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} />
+              <Carnet recettes={recettes} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} nouvelle={nouvelle} lecture={lecture} />
               {IPHONE && <button className="lien-bouton" onClick={() => setRaccourci(true)}>Le raccourci « Ajouter à Popote »</button>}
               <button className="lien-bouton" onClick={exporter}>Exporter mes recettes</button>
             </>
