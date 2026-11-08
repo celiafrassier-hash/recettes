@@ -60,11 +60,9 @@ export function toutesCategories(recettes: Recette[], creees: string[] = []): st
   return [...CATEGORIES, ...[...plus].sort((a, b) => a.localeCompare(b, 'fr'))];
 }
 
-// Monte (-1) ou descend (+1) l'élément k d'une liste ; rien ne bouge au bord.
-export function deplacer<T>(l: T[], k: number, sens: -1 | 1): T[] {
-  const j = k + sens;
-  if (j < 0 || j >= l.length) return l;
+// Sort l'élément `de` de la liste et le remet à la place `vers` (glisser une ligne par sa poignée).
+export function deplacerVers<T>(l: T[], de: number, vers: number): T[] {
   const copie = [...l];
-  [copie[k], copie[j]] = [copie[j], copie[k]];
+  copie.splice(vers, 0, ...copie.splice(de, 1));
   return copie;
 }

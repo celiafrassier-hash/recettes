@@ -158,24 +158,22 @@ input.qty { width: 90px; border: 1.5px solid var(--encre); border-radius: 10px; 
 .ingredients { list-style: none; margin: 0; padding: 0; }
 .ingredients li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef1ec; font-size: 15px; }
 .ingredients li { position: relative; align-items: center; }
-.ingredients li span:first-child { flex: 1; }
+.ingredients li .attrape + span { flex: 1; }
 .ingredients li .qte { flex: none; color: var(--doux); font-weight: 600; }
 .etapes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .etapes li { display: flex; gap: 12px; font-size: 15px; line-height: 1.45; }
 .etapes li { position: relative; }
 .etapes li p { margin: 0; flex: 1; }
-.points { flex: none; width: 32px; height: 32px; margin: -4px -6px -4px 0; border: 0; border-radius: 16px; background: transparent; color: var(--doux); font-size: 20px; line-height: 1; cursor: pointer; }
-.points[aria-expanded="true"] { background: #eef1ec; }
-.menu-points { position: absolute; right: 0; top: calc(100% - 4px); z-index: 3; display: flex; flex-direction: column; min-width: 150px; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(31, 42, 36, 0.18); overflow: hidden; }
-.menu-points button { min-height: 44px; padding: 0 16px; border: 0; background: #fff; text-align: left; font-size: 15px; font-weight: 600; color: var(--encre); cursor: pointer; font-family: inherit; }
-.menu-points button + button { border-top: 1px solid #eef1ec; }
-.menu-points button:disabled { color: #b5bdb2; cursor: default; }
-.liste { height: 44px; border-radius: 22px; border: 1.5px solid #c9d0c6; background: #fff; padding: 0 14px; font-size: 15px; font-weight: 600; color: var(--encre); font-family: inherit; max-width: 100%; }
-.choix-recette .liste { width: 100%; margin-bottom: 4px; }
+.attrape { flex: none; align-self: center; display: flex; align-items: center; justify-content: center; width: 32px; height: 40px; margin-left: -8px; color: #9aa596; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.attrape:active { color: var(--encre); cursor: grabbing; }
+.depot { margin: 6px; min-height: 40px; border: 2px dashed #c9d0c6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--doux); }
+.panneau-cat { background: var(--fond); border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.panneau-cat .categories { padding-bottom: 0; }
+.panneau-cat .categories button:not([aria-pressed="true"]):not(.nouvelle) { background: #fff; }
 .nouvelle-cat { display: flex; gap: 8px; width: 100%; }
 .nouvelle-cat input { flex: 1; min-width: 0; height: 44px; border-radius: 14px; border: 1.5px solid var(--encre); padding: 0 12px; font-size: 16px; font-family: inherit; }
 .nouvelle-cat button { flex: none; height: 44px; padding: 0 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
-.etapes li span { flex: none; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+.etapes li span:not(.attrape) { flex: none; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
 .pointilles { min-height: 44px; border-radius: 12px; border: 1.5px dashed #9aa596; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--encre); }
 .plein { height: 52px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
 .confirme { display: flex; flex-direction: column; gap: 10px; }
@@ -225,3 +223,22 @@ button:disabled { opacity: 0.6; }
 @keyframes vapeur { 0% { stroke-dashoffset: 60; opacity: 0; transform: translateY(6px); } 30% { opacity: 0.9; } 100% { stroke-dashoffset: -60; opacity: 0; transform: translateY(-16px); } }
 .voile { transition: background 0.4s; }
 .voile.part { background: transparent; pointer-events: none; }
+.article .attrape { margin-left: 4px; }
+.article .cocher { padding-left: 2px; }
+.choisir, .panneau-cat .plein { width: 100%; flex: none; }
+.choisie { display: flex; align-items: center; gap: 8px; min-height: 52px; border-radius: 16px; padding: 0 6px 0 16px; }
+.choisie strong { flex: 1; font-size: 15px; }
+.choisie .lien-bouton { color: var(--encre); text-decoration: underline; }
+.croix { flex: none; width: 40px; height: 40px; border: 0; border-radius: 20px; background: rgba(255, 255, 255, 0.6); font-size: 20px; color: var(--encre); cursor: pointer; }
+.centre { text-align: center; }
+.feuille.choix { min-height: 70vh; gap: 10px; }
+.poignee-feuille { width: 40px; height: 5px; border-radius: 3px; background: var(--trait); align-self: center; flex: none; }
+.feuille.choix .recherche { flex: none; box-shadow: none; border: 1.5px solid var(--trait); }
+.ligne-recette { display: flex; align-items: center; gap: 12px; padding: 8px; border: 0; border-radius: 14px; background: var(--fond); text-align: left; font: inherit; color: var(--encre); cursor: pointer; }
+.ligne-recette > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.ligne-recette strong { font-size: 15px; }
+.carre { flex: none; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; overflow: hidden; }
+.carre img { width: 100%; height: 100%; object-fit: cover; }
+.feuille form.nouvelle-cat { flex-direction: row; gap: 8px; }
+.feuille.choix > * { align-self: stretch; flex: none; }
+.feuille.choix > .poignee-feuille { align-self: center; }

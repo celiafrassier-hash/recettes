@@ -5,6 +5,8 @@ import { afficherQty, BASIQUES, cleLigne, listeCourses, portions, type Ajustemen
 import { parseLine } from './lib/ingredients';
 import type { AjLigne, CaseLigne } from './lib/menu';
 import { libelleSemaine } from './lib/semaines';
+import { norm } from './lib/texte';
+import { Poignee, usePoignee } from './Poignee';
 import { nomSemaine } from './Menu';
 
 type Props = {
@@ -12,6 +14,8 @@ type Props = {
   cases: CaseLigne[]; recettes: Recette[]; ajustements: AjLigne[];
   ajuster: (cle: string, patch: Partial<AjLigne>) => void;
   ajouterIngredients: (id: string) => void;
+  rayons: Record<string, Rayon>; // rayon choisi à la main, par aliment (norm)
+  changerRayon: (nom: string, rayon: Rayon) => void;
 };
 
 // Petite fête quand tout est coché : des confettis tombent une fois (coupés si le téléphone demande moins d'animations).
@@ -47,17 +51,29 @@ function useGlisse(cles: string) {
 
 const COULEURS_RAYON: Partial<Record<Rayon, string>> = { fl: '#2F6B4F', cr: '#3A5BA0', po: '#B83C0B', ep: '#7A5A00' };
 
-export default function Courses({ semaine, changerSemaine, cases, recettes, ajustements, ajuster, ajouterIngredients }: Props) {
+export default function Courses({ semaine, changerSemaine, cases, recettes, ajustements, ajuster, ajouterIngredients, rayons, changerRayon }: Props) {
   const [seul, setSeul] = useState<string | null>(null);
   const [ajout, setAjout] = useState('');
   const [corrige, setCorrige] = useState<{ cle: string; texte: string } | null>(null);
   const parId = new Map(recettes.map((r) => [r.id, { id: r.id, name: r.nom, ing: r.ingredients }]));
   const aj: Record<string, Ajustement> = Object.fromEntries(ajustements.map((a) => [a.cle, a]));
   const menu = cases.map((c) => ({ recette: c.plaisir ? 'plaisir' : c.recette!, personnes: c.personnes, note: c.note }));
-  const { lignes, sansIngredients } = listeCourses(menu, parId, aj, seul ?? undefined);
+  const res = listeCourses(menu, parId, aj, seul ?? undefined);
+  const sansIngredients = res.sansIngredients;
+  const lignes = res.lignes.map((l) => ({ ...l, rayon: rayons[norm(l.name)] ?? l.rayon }));
   const plats = [...portions(menu)].map(([id, n]) => ({ r: recettes.find((x) => x.id === id), n })).filter((p) => p.r);
   const retires = ajustements.filter((a) => a.retire);
   const parRayon = (Object.keys(RAYONS) as Rayon[]).map((ry) => ({ ry, lignes: lignes.filter((l) => l.rayon === ry).sort((a, b) => Number(a.coche) - Number(b.coche) || a.name.localeCompare(b.name, 'fr')) })).filter((g) => g.lignes.length);
+
+  // Glisser un article dans un autre rayon : Popote retient ce rayon pour cet aliment.
+  const ordre = parRayon.flatMap((g) => g.lignes);
+  const gl = usePoignee((de, _vers, x, y) => {
+    const sous = document.elementsFromPoint(x, y).find((el) => !el.closest('[data-tenue]') && el.closest('[data-rayon]'));
+    const ry = sous?.closest<HTMLElement>('[data-rayon]')?.dataset.rayon as Rayon | undefined;
+    if (ry && ry !== ordre[de].rayon) changerRayon(ordre[de].name, ry);
+  });
+  // Pendant le geste, tous les rayons s'affichent, même vides, pour pouvoir y lâcher l'article.
+  const rayonsAffiches = gl.tenue === null ? parRayon : (Object.keys(RAYONS) as Rayon[]).map((ry) => parRayon.find((g) => g.ry === ry) ?? { ry, lignes: [] });
 
   const glisse = useGlisse(parRayon.map((g) => g.lignes.map((l) => l.cle + l.coche).join()).join());
   const toutPris = lignes.length > 0 && lignes.every((l) => l.coche);
@@ -79,7 +95,7 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
   }
 
   return (
-    <div className="courses" ref={glisse}>
+    <div className="courses" ref={glisse} data-liste>
       {toutPris && <Confettis />}
       <div className="semaine">
         <button aria-label="Semaine précédente" onClick={() => changerSemaine(-1)}>‹</button>
@@ -108,12 +124,16 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
         </div>
       ))}
 
-      {parRayon.map(({ ry, lignes }) => (
-        <section key={ry} className="rayon">
+      {rayonsAffiches.map(({ ry, lignes }) => (
+        <section key={ry} className="rayon" data-rayon={ry}>
           <span className="etiquette" style={{ color: COULEURS_RAYON[ry] }}>{RAYONS[ry]}</span>
           <div className="articles">
-            {lignes.map((l) => (
-              <div key={l.cle} data-cle={l.cle} className={l.coche ? 'article coche' : 'article'}>
+            {lignes.length === 0 && <div className="depot">Lâche ici</div>}
+            {lignes.map((l) => {
+              const k = ordre.indexOf(l);
+              return (
+              <div key={l.cle} data-cle={l.cle} data-ligne data-tenue={gl.tenue === k || undefined} className={l.coche ? 'article coche' : 'article'} style={gl.style(k, false)}>
+                <Poignee nom={l.name} {...gl.prendre(k)} />
                 <button className="cocher" aria-pressed={l.coche} onClick={() => ajuster(l.cle, { coche: !l.coche })}>
                   <span className="case-a-cocher">{l.coche && <svg className="pop" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10" /></svg>}</span>
                   <span className="nom">{l.name}</span>
@@ -131,7 +151,8 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9AA596" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       ))}

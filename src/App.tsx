@@ -5,6 +5,8 @@ import Carnet from './Carnet';
 import Connexion from './Connexion';
 import Courses from './Courses';
 import Fiche from './Fiche';
+import type { Rayon } from './lib/aliments';
+import { norm } from './lib/texte';
 import { couleurDe, toutesCategories, type Membre, type Recette, type Statut } from './lib/carnet';
 import { cleLien, extraireLien } from './lib/liens';
 import { JOURS_LONGS, toucher, type AjLigne, type CaseLigne, type Choix, type Moment } from './lib/menu';
@@ -15,7 +17,7 @@ import Menu from './Menu';
 import Raccourci from './Raccourci';
 
 type Onglet = 'carnet' | 'menu' | 'courses';
-type Donnees = { email: string; membres: (Membre & { email: string })[]; recettes: Recette[]; statuts: Statut[]; cases: CaseLigne[]; ajustements: AjLigne[]; categories?: string[] };
+type Donnees = { email: string; membres: (Membre & { email: string })[]; recettes: Recette[]; statuts: Statut[]; cases: CaseLigne[]; ajustements: AjLigne[]; categories?: string[]; rayons?: Record<string, Rayon> };
 
 // Copie dans le téléphone : l'appli s'ouvre au magasin sans réseau (§2.6).
 const COPIE = 'popote-copie';
@@ -100,13 +102,14 @@ export default function App() {
       const { error } = await supabase.from('ajustement').upsert(file);
       if (!error) localStorage.removeItem(FILE);
     }
-    const [m, r, s, c, a, k] = await Promise.all([
+    const [m, r, s, c, a, k, ry] = await Promise.all([
       supabase.from('membre').select('id, prenom, initiale, email'),
       supabase.from('recette').select('*').order('creee_le', { ascending: false }),
       supabase.from('statut').select('*'),
       supabase.from('case_menu').select('semaine, jour, moment, recette, plaisir, personnes, note'),
       supabase.from('ajustement').select('semaine, cle, coche, retire, qty, ajoute, nom, unite'),
       supabase.from('categorie').select('nom').order('nom'),
+      supabase.from('rayon_aliment').select('cle, rayon'),
     ]);
     enCours.current = false;
     if (m.error || r.error || s.error || c.error || a.error || k.error) {
@@ -117,7 +120,7 @@ export default function App() {
     // Les coches encore en attente gardent le dessus sur ce que dit le serveur.
     const enAttente: AjLigne[] = lire(FILE, []);
     const ajustements = [...a.data.filter((x) => !enAttente.some((y) => y.semaine === x.semaine && y.cle === x.cle)), ...enAttente];
-    const tout = { email, membres: m.data, recettes: r.data, statuts: s.data, cases: c.data, ajustements, categories: k.data.map((x) => x.nom) };
+    const tout = { email, membres: m.data, recettes: r.data, statuts: s.data, cases: c.data, ajustements, categories: k.data.map((x) => x.nom), rayons: Object.fromEntries((ry.data ?? []).map((x) => [x.cle, x.rayon])) };
     ecrire(COPIE, tout);
     setD(tout);
   }, []);
@@ -180,8 +183,13 @@ export default function App() {
   }
 
   async function modifier(id: string, patch: Partial<Recette>) {
+    const avant = recettes.find((r) => r.id === id);
+    maj((x) => ({ ...x, recettes: x.recettes.map((r) => (r.id === id ? { ...r, ...patch } : r)) }));
     const { data, error } = await supabase.from('recette').update(patch).eq('id', id).select().single();
-    if (error) return setMessage(ERREUR);
+    if (error) {
+      if (avant) maj((x) => ({ ...x, recettes: x.recettes.map((r) => (r.id === id ? avant : r)) }));
+      return setMessage(ERREUR);
+    }
     maj((x) => ({ ...x, recettes: x.recettes.map((r) => (r.id === id ? data : r)) }));
     if (patch.ingredients?.length && demande === id) setDemande(null);
   }
@@ -239,6 +247,14 @@ export default function App() {
     maj((x) => ({ ...x, cases: [...autres(x), ligne] }));
     const r = recettes.find((x) => x.id === ligne.recette);
     if (r && !r.ingredients.length) setDemande(r.id);
+  }
+
+  // Rayon choisi à la main pour un aliment (commun : le jambon cru est au même rayon pour tout le monde).
+  async function changerRayon(nom: string, rayon: Rayon) {
+    const cle = norm(nom);
+    maj((x) => ({ ...x, rayons: { ...x.rayons, [cle]: rayon } }));
+    const { error } = await supabase.from('rayon_aliment').upsert({ cle, rayon });
+    if (error) setMessage(ERREUR);
   }
 
   async function creerCategorie(nom: string) {
@@ -350,13 +366,13 @@ export default function App() {
             </>
           )}
           {onglet === 'menu' && (
-            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter}
+            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} categories={d.categories ?? []} faites={new Set(d.statuts.filter((s) => s.membre === moi.id && s.valeur === 'deja_faite').map((s) => s.recette))} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter}
               demande={recettes.find((r) => r.id === demande) ?? null}
               ajouterIngredients={() => { setOuverte({ id: demande!, ingredients: true }); setDemande(null); }} plusTard={() => setDemande(null)} />
           )}
           {onglet === 'courses' && (
             <Courses semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes}
-              ajustements={d.ajustements.filter((a) => a.semaine === sem)} ajuster={ajuster} ajouterIngredients={(id) => setOuverte({ id, ingredients: true })} />
+              ajustements={d.ajustements.filter((a) => a.semaine === sem)} ajuster={ajuster} ajouterIngredients={(id) => setOuverte({ id, ingredients: true })} rayons={d.rayons ?? {}} changerRayon={changerRayon} />
           )}
 
           <nav className="barre" aria-label="Navigation">

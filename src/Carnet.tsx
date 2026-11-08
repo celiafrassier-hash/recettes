@@ -20,24 +20,46 @@ export function Pastille({ membre }: { membre?: Membre }) {
   return <span className="pastille" role="img" aria-label={`Ajoutée par ${membre.prenom}`}>{membre.initiale}</span>;
 }
 
-type Props = { recettes: Recette[]; categories: string[]; creerCategorie: (nom: string) => void; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void; nouvelle?: string | null; lecture?: string | null };
-
-export default function Carnet({ recettes, categories, creerCategorie, membres, statuts, moi, ouvrir, nouvelle, lecture }: Props) {
-  const [q, setQ] = useState('');
-  const [cat, setCat] = useState('');
+// Catégories en boutons : fermé, les 5 plus utilisées (plus celle choisie) tiennent sur 2 lignes ; « Toutes » déplie le reste.
+export function Categories({ recettes, categories, cat, setCat, creerCategorie }: { recettes: Recette[]; categories: string[]; cat: string; setCat: (c: string) => void; creerCategorie?: (nom: string) => void }) {
   const [toutes, setToutes] = useState(false);
   const [nouvCat, setNouvCat] = useState<string | null>(null);
   const listeCats = toutesCategories(recettes, categories);
-  // Fermé : les 5 plus utilisées (plus celle choisie), pour tenir sur 2 lignes. Ouvert : toutes.
   const compte = (c: string) => recettes.filter((r) => r.categories.includes(c)).length;
   const top = [...listeCats].sort((a, b) => compte(b) - compte(a)).slice(0, 5);
   const visibles = toutes ? listeCats : cat && !top.includes(cat) ? [cat, ...top.slice(0, 4)] : top;
   const creer = (e: React.FormEvent) => {
     e.preventDefault();
     const nom = nouvCat?.trim();
-    if (nom && !listeCats.some((c) => norm(c) === norm(nom))) creerCategorie(nom);
+    if (nom && creerCategorie && !listeCats.some((c) => norm(c) === norm(nom))) creerCategorie(nom);
     setNouvCat(null);
   };
+  return (
+      <div className="categories enveloppe">
+        {visibles.map((c) => (
+          <button key={c} aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
+        ))}
+        <button className="toutes" aria-expanded={toutes} onClick={() => { setToutes(!toutes); setNouvCat(null); }}>
+          {toutes ? 'Moins ▴' : `Toutes (${listeCats.length}) ▾`}
+        </button>
+        {toutes && creerCategorie && (nouvCat === null ? (
+          <button className="nouvelle" onClick={() => setNouvCat('')}>+ Nouvelle</button>
+        ) : (
+          <form className="nouvelle-cat" onSubmit={creer}>
+            <input value={nouvCat} onChange={(e) => setNouvCat(e.target.value)} placeholder="Apéro, brunch…" aria-label="Nom de la nouvelle catégorie" maxLength={40} autoFocus />
+            <button type="button" className="secondaire" onClick={() => setNouvCat(null)}>Annuler</button>
+            <button className="principal">Créer</button>
+          </form>
+        ))}
+      </div>
+  );
+}
+
+type Props = { recettes: Recette[]; categories: string[]; creerCategorie: (nom: string) => void; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void; nouvelle?: string | null; lecture?: string | null };
+
+export default function Carnet({ recettes, categories, creerCategorie, membres, statuts, moi, ouvrir, nouvelle, lecture }: Props) {
+  const [q, setQ] = useState('');
+  const [cat, setCat] = useState('');
   const liste = chercher(recettes, q, cat);
   const fait = (r: string, m: string) => statuts.some((s) => s.recette === r && s.membre === m && s.valeur === 'deja_faite');
 
@@ -48,23 +70,7 @@ export default function Carnet({ recettes, categories, creerCategorie, membres, 
         <span className="cache">Rechercher une recette</span>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="crevettes, ravioles, gratin…" />
       </label>
-      <div className="categories enveloppe">
-        {visibles.map((c) => (
-          <button key={c} aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
-        ))}
-        <button className="toutes" aria-expanded={toutes} onClick={() => { setToutes(!toutes); setNouvCat(null); }}>
-          {toutes ? 'Moins ▴' : `Toutes (${listeCats.length}) ▾`}
-        </button>
-        {toutes && (nouvCat === null ? (
-          <button className="nouvelle" onClick={() => setNouvCat('')}>+ Nouvelle</button>
-        ) : (
-          <form className="nouvelle-cat" onSubmit={creer}>
-            <input value={nouvCat} onChange={(e) => setNouvCat(e.target.value)} placeholder="Apéro, batch…" aria-label="Nom de la nouvelle catégorie" maxLength={40} autoFocus />
-            <button type="button" className="secondaire" onClick={() => setNouvCat(null)}>Annuler</button>
-            <button className="principal">Créer</button>
-          </form>
-        ))}
-      </div>
+      <Categories recettes={recettes} categories={categories} cat={cat} setCat={setCat} creerCategorie={creerCategorie} />
       <div className="petit">
         {recettes.length === 0 ? 'Le carnet est vide : touche + pour ajouter une recette, ou partage une vidéo depuis Instagram.'
           : `${liste.length} recette${liste.length > 1 ? 's' : ''}${q || cat ? ' trouvée' + (liste.length > 1 ? 's' : '') : ''}`}

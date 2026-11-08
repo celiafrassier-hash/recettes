@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chercher, couleurDe, deplacer, resume, toutesCategories, versTexte, type Recette } from '../src/lib/carnet';
+import { chercher, couleurDe, deplacerVers, resume, toutesCategories, versTexte, type Recette } from '../src/lib/carnet';
 import { parseIngredients } from '../src/lib/ingredients';
 
 const r = (o: Partial<Recette>): Recette => ({
@@ -55,11 +55,10 @@ describe('photo', () => {
 });
 
 describe('ordre et catégories', () => {
-  it('monter, descendre, rien au bord', () => {
-    expect(deplacer(['a', 'b', 'c'], 1, -1)).toEqual(['b', 'a', 'c']);
-    expect(deplacer(['a', 'b', 'c'], 1, 1)).toEqual(['a', 'c', 'b']);
-    expect(deplacer(['a', 'b'], 0, -1)).toEqual(['a', 'b']);
-    expect(deplacer(['a', 'b'], 1, 1)).toEqual(['a', 'b']);
+  it('glisser une ligne vers le haut, le bas, sur place', () => {
+    expect(deplacerVers(['a', 'b', 'c', 'd'], 3, 1)).toEqual(['a', 'd', 'b', 'c']);
+    expect(deplacerVers(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd']);
+    expect(deplacerVers(['a', 'b'], 1, 1)).toEqual(['a', 'b']);
   });
   it('catégories ajoutées à la main, après celles de base, sans doublon', () => {
     const l = toutesCategories([r({ categories: ['Apéro', 'Poulet'] }), r({ id: 'x', categories: ['Apéro', 'Batch'] })]);
