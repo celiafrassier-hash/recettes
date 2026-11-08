@@ -9,7 +9,7 @@ import type { Rayon } from './lib/aliments';
 import { norm } from './lib/texte';
 import { couleurDe, toutesCategories, type Membre, type Recette, type Statut } from './lib/carnet';
 import { cleLien, extraireLien } from './lib/liens';
-import { JOURS_LONGS, toucher, type AjLigne, type CaseLigne, type Choix, type Moment } from './lib/menu';
+import { JOURS_LONGS, reunir, toucher, type AjLigne, type CaseLigne, type Choix, type Moment } from './lib/menu';
 import { reduire } from './lib/photo';
 import { cleSemaine, lundiDe, semaineParDefaut } from './lib/semaines';
 import { supabase } from './lib/supabase';
@@ -230,21 +230,32 @@ export default function App() {
     setMessage(auMenu ? 'Recette supprimée : ses cases du menu sont vidées' : 'Recette supprimée');
   }
 
-  // `c` : plat ajouté depuis la feuille du repas ; sinon la recette choisie dans la rangée.
+  // Ajoute un plat au repas : la recette choisie dans la rangée, ou `c` choisie depuis le repas lui-même.
   async function toucherCase(jour: number, moment: Moment, c: Choix | null = choix) {
+    if (!c) return setMessage('Choisis d’abord une recette');
     const repas = d!.cases.filter((x) => x.semaine === sem && x.jour === jour && x.moment === moment);
     const geste = toucher(repas, c);
-    if (geste.action === 'rien') return setMessage('Choisis d’abord une recette dans la rangée');
-    if (geste.action === 'vider') return enlever(jour, moment);
-    if (geste.action === 'retirer') return enlever(jour, moment, geste.plat);
-    const plaisir = c!.recette === 'plaisir';
+    if (geste.action === 'deja') return setMessage('Déjà dans ce repas');
+    const plaisir = c.recette === 'plaisir';
     // La note est celle du repas : un plat ajouté la reprend.
-    const ligne: CaseLigne = { semaine: sem, jour, moment, plat: geste.plat, recette: plaisir ? null : c!.recette, plaisir, personnes: c!.personnes, note: repas[0]?.note ?? null };
+    const ligne: CaseLigne = { semaine: sem, jour, moment, plat: geste.plat, recette: plaisir ? null : c.recette, plaisir, personnes: c.personnes, note: repas[0]?.note ?? null };
     const { error } = await supabase.from('case_menu').upsert(ligne);
     if (error) return setMessage(ERREUR);
-    maj((x) => ({ ...x, cases: [...x.cases.filter((c) => !(c.semaine === sem && c.jour === jour && c.moment === moment && c.plat === geste.plat)), ligne] }));
+    maj((x) => ({ ...x, cases: [...x.cases.filter((y) => !(y.semaine === sem && y.jour === jour && y.moment === moment && y.plat === geste.plat)), ligne] }));
     const r = recettes.find((x) => x.id === ligne.recette);
     if (r && !r.ingredients.length) setDemande(r.id);
+  }
+
+  // Repas glissé sur un autre jour : il y va, ou rejoint le repas déjà posé là.
+  async function deplacer(de: { jour: number; moment: Moment }, vers: { jour: number; moment: Moment }) {
+    const du = (p: typeof de) => (x: CaseLigne) => x.semaine === sem && x.jour === p.jour && x.moment === p.moment;
+    const lignes = reunir(d!.cases.filter(du(de)), d!.cases.filter(du(vers)), vers.jour, vers.moment);
+    // Enregistrer l'arrivée avant d'effacer le départ : en cas de coupure, rien n'est perdu.
+    const { error } = await supabase.from('case_menu').upsert(lignes);
+    if (error) return setMessage(ERREUR);
+    const { error: e2 } = await supabase.from('case_menu').delete().match({ semaine: sem, jour: de.jour, moment: de.moment });
+    if (e2) setMessage(ERREUR);
+    maj((x) => ({ ...x, cases: [...x.cases.filter((y) => !du(vers)(y) && (!!e2 || !du(de)(y))), ...lignes] }));
   }
 
   // Retire un plat du repas, ou tout le repas si aucun plat n'est donné.
@@ -383,7 +394,7 @@ export default function App() {
             </>
           )}
           {onglet === 'menu' && (
-            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} categories={d.categories ?? []} faites={new Set(d.statuts.filter((s) => s.membre === moi.id && s.valeur === 'deja_faite').map((s) => s.recette))} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter} enlever={enlever}
+            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} categories={d.categories ?? []} faites={new Set(d.statuts.filter((s) => s.membre === moi.id && s.valeur === 'deja_faite').map((s) => s.recette))} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter} enlever={enlever} deplacer={deplacer}
               demande={recettes.find((r) => r.id === demande) ?? null}
               ajouterIngredients={() => { setOuverte({ id: demande!, ingredients: true }); setDemande(null); }} plusTard={() => setDemande(null)} />
           )}
