@@ -257,6 +257,15 @@ export default function App() {
     if (error) setMessage(ERREUR);
   }
 
+  // Supprime la catégorie de la liste commune et la retire de chaque recette qui l'avait.
+  async function supprimerCategorie(nom: string) {
+    const { error } = await supabase.from('categorie').delete().eq('nom', nom);
+    if (error) return setMessage(ERREUR);
+    maj((x) => ({ ...x, categories: (x.categories ?? []).filter((c) => c !== nom) }));
+    for (const r of recettes.filter((r) => r.categories.includes(nom))) await modifier(r.id, { categories: r.categories.filter((c) => c !== nom) });
+    setMessage(`Catégorie « ${nom} » supprimée`);
+  }
+
   async function creerCategorie(nom: string) {
     const { error } = await supabase.from('categorie').insert({ nom });
     if (error && error.code !== '23505') return setMessage(ERREUR); // 23505 : l'autre vient de la créer
@@ -360,7 +369,7 @@ export default function App() {
                   </button>
                 ))}
               </section>
-              <Carnet recettes={recettes} categories={d.categories ?? []} creerCategorie={creerCategorie} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} nouvelle={nouvelle} lecture={lecture} />
+              <Carnet recettes={recettes} categories={d.categories ?? []} creerCategorie={creerCategorie} supprimerCategorie={supprimerCategorie} membres={d.membres} statuts={d.statuts} moi={moi.id} ouvrir={(id) => setOuverte({ id })} nouvelle={nouvelle} lecture={lecture} />
               {IPHONE && <button className="lien-bouton" onClick={() => setRaccourci(true)}>Le raccourci « Ajouter à Popote »</button>}
               <button className="lien-bouton" onClick={exporter}>Exporter mes recettes</button>
             </>

@@ -44,6 +44,40 @@ export function usePoignee(lacher: (de: number, vers: number, x: number, y: numb
   return { prendre, style, tenue: g?.de ?? null };
 }
 
+// Feuille (fiche, choix de recette) qu'on ferme en la tirant vers le bas depuis son haut.
+export function useDescendre(fermer: () => void) {
+  // Tirer la feuille vers le bas (depuis le haut, photo ou poignée) pour la fermer, au lieu de la croix.
+  const [tire, setTire] = useState<{ y0: number; dy: number; t: number; v: number } | null>(null);
+  const [part, setPart] = useState(false);
+  // Fermeture : la feuille finit de descendre en douceur (0,4 s), puis disparaît.
+  const partir = () => {
+    setPart(true);
+    setTimeout(fermer, 400);
+  };
+  const tirer = {
+    onPointerDown: (e: React.PointerEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setTire({ y0: e.clientY, dy: 0, t: e.timeStamp, v: 0 });
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      if (!tire) return;
+      const dy = Math.max(0, e.clientY - tire.y0);
+      setTire({ ...tire, dy, t: e.timeStamp, v: (dy - tire.dy) / Math.max(1, e.timeStamp - tire.t) });
+    },
+    // Lâchée assez bas, ou lancée d'un petit coup vers le bas : elle part. Sinon elle remonte.
+    onPointerUp: () => {
+      if (tire && (tire.dy > 90 || (tire.dy > 20 && tire.v > 0.5))) partir();
+      setTire(null);
+    },
+    onPointerCancel: () => setTire(null),
+  };
+  const style: React.CSSProperties | undefined = part
+    ? { transform: 'translateY(100%)', transition: 'transform 0.4s cubic-bezier(0.3, 0, 0.2, 1)' }
+    : tire ? { transform: `translateY(${tire.dy}px)`, transition: 'none' } : undefined;
+  return { part, partir, tirer, style };
+}
+
 // Les 6 points ⠿ à gauche de la ligne.
 export function Poignee({ nom, ...gestes }: { nom: string } & ReturnType<ReturnType<typeof usePoignee>['prendre']>) {
   return (

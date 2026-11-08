@@ -242,3 +242,6 @@ button:disabled { opacity: 0.6; }
 .feuille form.nouvelle-cat { flex-direction: row; gap: 8px; }
 .feuille.choix > * { align-self: stretch; flex: none; }
 .feuille.choix > .poignee-feuille { align-self: center; }
+.categories button.a-retirer { background: #fff; border: 1.5px solid #9a2b1e; color: #9a2b1e; }
+.haut-choix { position: relative; min-height: 44px; margin: -8px -8px 0; display: flex; justify-content: center; padding-top: 4px; touch-action: none; }
+.haut-choix .fermer { top: 0; right: 0; background: var(--fond); }

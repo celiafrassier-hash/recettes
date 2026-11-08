@@ -3,6 +3,7 @@ import { Categories } from './Carnet';
 import { chercher, couleurDe, type Recette } from './lib/carnet';
 import { JOURS, type CaseLigne, type Choix, type Moment } from './lib/menu';
 import { libelleSemaine, lundiDe } from './lib/semaines';
+import { useDescendre } from './Poignee';
 
 type Props = {
   semaine: Date; changerSemaine: (d: number) => void;
@@ -124,12 +125,18 @@ function FeuilleChoix({ recettes, categories, auMenu, faites, choisir, fermer }:
       <span><strong>{r.nom}</strong><span className="petit">{faites.has(r.id) ? 'Déjà faite' : 'À tester'}</span></span>
     </button>
   );
+  const { part, partir, tirer, style } = useDescendre(fermer);
   const deja = liste.filter((r) => auMenu.has(r.id));
   const reste = liste.filter((r) => !auMenu.has(r.id));
   return (
-    <div className="voile" onClick={fermer}>
-      <div role="dialog" aria-label="Choisir une recette" className="feuille choix" onClick={(e) => e.stopPropagation()}>
-        <span className="poignee-feuille" aria-hidden="true" />
+    <div className={part ? 'voile part' : 'voile'} onClick={partir}>
+      <div role="dialog" aria-label="Choisir une recette" className="feuille choix" onClick={(e) => e.stopPropagation()} style={style}>
+        <div className="haut-choix" {...tirer}>
+          <span className="poignee-feuille" aria-hidden="true" />
+          <button className="fermer" aria-label="Fermer" onClick={partir}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
         <label className="recherche">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <span className="cache">Chercher une recette</span>

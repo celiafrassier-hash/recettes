@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { norm } from './lib/texte';
-import { chercher, couleurDe, resume, toutesCategories, type Membre, type Recette, type Statut } from './lib/carnet';
+import { CATEGORIES, chercher, couleurDe, resume, toutesCategories, type Membre, type Recette, type Statut } from './lib/carnet';
 
 export function LogoType({ type }: { type: Recette['type'] }) {
   const label = { insta: 'Vidéo Instagram', web: "Recette d'un site web", main: 'Recette écrite à la main' }[type];
@@ -21,9 +21,15 @@ export function Pastille({ membre }: { membre?: Membre }) {
 }
 
 // Catégories en boutons : fermé, les 5 plus utilisées (plus celle choisie) tiennent sur 2 lignes ; « Toutes » déplie le reste.
-export function Categories({ recettes, categories, cat, setCat, creerCategorie }: { recettes: Recette[]; categories: string[]; cat: string; setCat: (c: string) => void; creerCategorie?: (nom: string) => void }) {
+export function Categories({ recettes, categories, cat, setCat, creerCategorie, supprimerCategorie }: {
+  recettes: Recette[]; categories: string[]; cat: string; setCat: (c: string) => void;
+  creerCategorie?: (nom: string) => void; supprimerCategorie?: (nom: string) => void;
+}) {
   const [toutes, setToutes] = useState(false);
   const [nouvCat, setNouvCat] = useState<string | null>(null);
+  // Mode « Supprimer » : seules les catégories ajoutées à la main peuvent partir (celles de base restent).
+  const [gerer, setGerer] = useState(false);
+  const [aSupprimer, setASupprimer] = useState<string | null>(null);
   const listeCats = toutesCategories(recettes, categories);
   const compte = (c: string) => recettes.filter((r) => r.categories.includes(c)).length;
   const top = [...listeCats].sort((a, b) => compte(b) - compte(a)).slice(0, 5);
@@ -34,6 +40,34 @@ export function Categories({ recettes, categories, cat, setCat, creerCategorie }
     if (nom && creerCategorie && !listeCats.some((c) => norm(c) === norm(nom))) creerCategorie(nom);
     setNouvCat(null);
   };
+  const aLaMain = listeCats.filter((c) => !CATEGORIES.includes(c));
+  if (gerer) {
+    return (
+      <div className="panneau-cat">
+        {aSupprimer ? (
+          <div role="alertdialog" className="alerte confirme">
+            <span>Supprimer « {aSupprimer} » ? {compte(aSupprimer) ? `Elle est retirée de ${compte(aSupprimer)} recette${compte(aSupprimer) > 1 ? 's' : ''}, pour tout le monde.` : 'Aucune recette ne l’utilise.'}</span>
+            <div className="boutons">
+              <button className="secondaire" onClick={() => setASupprimer(null)}>Annuler</button>
+              <button className="danger" onClick={() => { supprimerCategorie!(aSupprimer); if (cat === aSupprimer) setCat(''); setASupprimer(null); }}>Supprimer</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <strong>Touche celle à supprimer</strong>
+            {aLaMain.length ? (
+              <div className="categories enveloppe">
+                {aLaMain.map((c) => <button key={c} className="a-retirer" aria-label={`Supprimer la catégorie ${c}`} onClick={() => setASupprimer(c)}>{c} ×</button>)}
+              </div>
+            ) : (
+              <span className="petit">Aucune catégorie ajoutée à la main. Celles de base ne se suppriment pas.</span>
+            )}
+            <button className="principal plein" onClick={() => setGerer(false)}>Terminé</button>
+          </>
+        )}
+      </div>
+    );
+  }
   return (
       <div className="categories enveloppe">
         {visibles.map((c) => (
@@ -51,13 +85,14 @@ export function Categories({ recettes, categories, cat, setCat, creerCategorie }
             <button className="principal">Créer</button>
           </form>
         ))}
+        {toutes && supprimerCategorie && nouvCat === null && <button className="nouvelle" onClick={() => setGerer(true)}>Supprimer…</button>}
       </div>
   );
 }
 
-type Props = { recettes: Recette[]; categories: string[]; creerCategorie: (nom: string) => void; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void; nouvelle?: string | null; lecture?: string | null };
+type Props = { recettes: Recette[]; categories: string[]; creerCategorie: (nom: string) => void; supprimerCategorie: (nom: string) => void; membres: Membre[]; statuts: Statut[]; moi: string; ouvrir: (id: string) => void; nouvelle?: string | null; lecture?: string | null };
 
-export default function Carnet({ recettes, categories, creerCategorie, membres, statuts, moi, ouvrir, nouvelle, lecture }: Props) {
+export default function Carnet({ recettes, categories, creerCategorie, supprimerCategorie, membres, statuts, moi, ouvrir, nouvelle, lecture }: Props) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const liste = chercher(recettes, q, cat);
@@ -70,7 +105,7 @@ export default function Carnet({ recettes, categories, creerCategorie, membres, 
         <span className="cache">Rechercher une recette</span>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="crevettes, ravioles, gratin…" />
       </label>
-      <Categories recettes={recettes} categories={categories} cat={cat} setCat={setCat} creerCategorie={creerCategorie} />
+      <Categories recettes={recettes} categories={categories} cat={cat} setCat={setCat} creerCategorie={creerCategorie} supprimerCategorie={supprimerCategorie} />
       <div className="petit">
         {recettes.length === 0 ? 'Le carnet est vide : touche + pour ajouter une recette, ou partage une vidéo depuis Instagram.'
           : `${liste.length} recette${liste.length > 1 ? 's' : ''}${q || cat ? ' trouvée' + (liste.length > 1 ? 's' : '') : ''}`}

@@ -5,7 +5,7 @@ import { couleurDe, deplacerVers, versTexte, type Membre, type Recette, type Sta
 import { afficherQty } from './lib/courses';
 import { parseIngredients } from './lib/ingredients';
 import { norm } from './lib/texte';
-import { Poignee, usePoignee } from './Poignee';
+import { Poignee, useDescendre, usePoignee } from './Poignee';
 
 type Props = {
   r: Recette; categories: string[]; membres: Membre[]; statuts: Statut[]; moi: string;
@@ -28,32 +28,7 @@ export default function Fiche({ r, categories, membres, statuts, moi, modifier, 
   const [menuPhoto, setMenuPhoto] = useState(false);
   const [nouvCat, setNouvCat] = useState<string | null>(null);
   const [panneauCat, setPanneauCat] = useState(false);
-  // Tirer la fiche vers le bas (depuis le haut, photo ou poignée) pour la fermer, au lieu de la croix.
-  const [tire, setTire] = useState<{ y0: number; dy: number; t: number; v: number } | null>(null);
-  const [part, setPart] = useState(false);
-  // Fermeture : la fiche finit de descendre en douceur (0,4 s), puis disparaît.
-  const partir = () => {
-    setPart(true);
-    setTimeout(fermer, 400);
-  };
-  const tirer = {
-    onPointerDown: (e: React.PointerEvent) => {
-      if ((e.target as HTMLElement).closest('button')) return;
-      e.currentTarget.setPointerCapture(e.pointerId);
-      setTire({ y0: e.clientY, dy: 0, t: e.timeStamp, v: 0 });
-    },
-    onPointerMove: (e: React.PointerEvent) => {
-      if (!tire) return;
-      const dy = Math.max(0, e.clientY - tire.y0);
-      setTire({ ...tire, dy, t: e.timeStamp, v: (dy - tire.dy) / Math.max(1, e.timeStamp - tire.t) });
-    },
-    // Lâchée assez bas, ou lancée d'un petit coup vers le bas : elle part. Sinon elle remonte.
-    onPointerUp: () => {
-      if (tire && (tire.dy > 90 || (tire.dy > 20 && tire.v > 0.5))) partir();
-      setTire(null);
-    },
-    onPointerCancel: () => setTire(null),
-  };
+  const { part, partir, tirer, style: descente } = useDescendre(fermer);
   const choisi = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = '';
@@ -82,7 +57,7 @@ export default function Fiche({ r, categories, membres, statuts, moi, modifier, 
   return (
     <div className={part ? 'voile part' : 'voile'} onClick={partir}>
       <div role="dialog" aria-label={r.nom} className="feuille fiche" onClick={(e) => e.stopPropagation()}
-        style={part ? { transform: 'translateY(100%)', transition: 'transform 0.4s cubic-bezier(0.3, 0, 0.2, 1)' } : tire ? { transform: `translateY(${tire.dy}px)`, transition: 'none' } : undefined}>
+        style={descente}>
         <div className={r.photo ? 'haut avec-photo' : 'haut'} style={{ background: couleurDe(r) }} {...tirer}>
           <span className="poignee" aria-hidden="true" />
           {r.photo ? <img src={r.photo} alt={`Photo : ${r.nom}`} /> : <span className="initiale" aria-hidden="true">{r.nom.trim()[0]?.toUpperCase()}</span>}
