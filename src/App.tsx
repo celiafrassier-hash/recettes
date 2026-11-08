@@ -230,15 +230,16 @@ export default function App() {
     setMessage(auMenu ? 'Recette supprimée : ses cases du menu sont vidées' : 'Recette supprimée');
   }
 
-  async function toucherCase(jour: number, moment: Moment) {
-    const repas = d!.cases.filter((c) => c.semaine === sem && c.jour === jour && c.moment === moment);
-    const geste = toucher(repas, choix);
+  // `c` : plat ajouté depuis la feuille du repas ; sinon la recette choisie dans la rangée.
+  async function toucherCase(jour: number, moment: Moment, c: Choix | null = choix) {
+    const repas = d!.cases.filter((x) => x.semaine === sem && x.jour === jour && x.moment === moment);
+    const geste = toucher(repas, c);
     if (geste.action === 'rien') return setMessage('Choisis d’abord une recette dans la rangée');
     if (geste.action === 'vider') return enlever(jour, moment);
     if (geste.action === 'retirer') return enlever(jour, moment, geste.plat);
-    const plaisir = choix!.recette === 'plaisir';
+    const plaisir = c!.recette === 'plaisir';
     // La note est celle du repas : un plat ajouté la reprend.
-    const ligne: CaseLigne = { semaine: sem, jour, moment, plat: geste.plat, recette: plaisir ? null : choix!.recette, plaisir, personnes: choix!.personnes, note: repas[0]?.note ?? null };
+    const ligne: CaseLigne = { semaine: sem, jour, moment, plat: geste.plat, recette: plaisir ? null : c!.recette, plaisir, personnes: c!.personnes, note: repas[0]?.note ?? null };
     const { error } = await supabase.from('case_menu').upsert(ligne);
     if (error) return setMessage(ERREUR);
     maj((x) => ({ ...x, cases: [...x.cases.filter((c) => !(c.semaine === sem && c.jour === jour && c.moment === moment && c.plat === geste.plat)), ligne] }));

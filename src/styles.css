@@ -87,6 +87,9 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .semaine > span { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 15px; }
 .demande { display: flex; flex-direction: column; gap: 10px; }
 .choix-recette { display: flex; flex-direction: column; gap: 8px; }
+.haut-repas { display: flex; align-items: center; justify-content: space-between; }
+.haut-repas .lien-bouton, .plat-repas .lien-bouton, .note-repas > .lien-bouton { min-height: 44px; padding: 0 4px; }
+.ajout-plat { height: 48px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
 .plat-repas { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 600; }
 .note-case { display: block; margin-top: 3px; font-weight: 500; font-size: 11px; opacity: 0.8; }
 .grille-menu { display: grid; grid-template-columns: 44px repeat(2, minmax(0, 1fr)); gap: 6px; }

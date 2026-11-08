@@ -9,7 +9,7 @@ type Props = {
   semaine: Date; changerSemaine: (d: number) => void;
   cases: CaseLigne[]; recettes: Recette[]; categories: string[]; faites: Set<string>;
   choix: Choix | null; setChoix: (c: Choix | null) => void;
-  toucherCase: (jour: number, moment: Moment) => void;
+  toucherCase: (jour: number, moment: Moment, c?: Choix) => void;
   noter: (jour: number, moment: Moment, note: string) => Promise<void>;
   enlever: (jour: number, moment: Moment, plat?: number) => Promise<void>;
   demande: Recette | null; ajouterIngredients: () => void; plusTard: () => void;
@@ -27,7 +27,8 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
   const nom = (id: string | null) => recettes.find((r) => r.id === id);
   // Recettes déjà au menu cette semaine d'abord, puis le reste du carnet par ordre alphabétique.
   const auMenu = new Set(cases.map((c) => c.recette));
-  const [feuille, setFeuille] = useState(false);
+  // Feuille de choix : pour la rangée du haut, ou pour ajouter un plat au repas ouvert.
+  const [feuille, setFeuille] = useState<'rangee' | 'repas' | null>(null);
   const choisie = choix && choix.recette !== 'plaisir' ? nom(choix.recette) : undefined;
   // Case pleine touchée sans recette choisie : on ouvre sa note (« + légumes ») au lieu de la vider.
   const [ouverte, setOuverte] = useState<{ jour: number; moment: Moment; note: string } | null>(null);
@@ -35,6 +36,11 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
   const repasDe = (jour: number, moment: Moment) => cases.filter((x) => x.jour === jour && x.moment === moment).sort((a, b) => a.plat - b.plat);
   const nomPlat = (c: CaseLigne) => (c.plaisir ? 'Plaisir' : nom(c.recette)?.nom ?? '') + (c.personnes > 1 ? ` · ${c.personnes} pers.` : '');
   const plats = ouverte ? repasDe(ouverte.jour, ouverte.moment) : [];
+  // Fermer le repas enregistre sa note : pas de bouton « Enregistrer » à penser.
+  const fermerRepas = () => {
+    if (ouverte && plats.length && ouverte.note.trim() !== (plats[0].note ?? '')) noter(ouverte.jour, ouverte.moment, ouverte.note.trim());
+    setOuverte(null);
+  };
 
   return (
     <div className="menu">
@@ -61,13 +67,13 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
           {choix ? (
             <div className="choisie" style={{ background: choisie ? couleurDe(choisie) : BEIGE }}>
               <strong>{choisie?.nom ?? 'Plaisir'}{choix.personnes > 1 ? ` · ${choix.personnes} pers.` : ''}</strong>
-              <button className="lien-bouton" onClick={() => setFeuille(true)}>Changer</button>
+              <button className="lien-bouton" onClick={() => setFeuille('rangee')}>Changer</button>
               <button className="croix" aria-label="Ne plus poser cette recette" onClick={() => setChoix(null)}>×</button>
             </div>
           ) : (
-            <button className="principal plein choisir" onClick={() => { setOuverte(null); setFeuille(true); }}>+ Choisir une recette</button>
+            <button className="principal plein choisir" onClick={() => { fermerRepas(); setFeuille('rangee'); }}>+ Choisir une recette</button>
           )}
-          <span className="petit centre">{choix ? 'Touche les repas où tu la manges (elle s’ajoute aux plats déjà posés)' : 'Touche un repas déjà posé pour y ajouter une note'}</span>
+          <span className="petit centre">{choix ? 'Touche les repas où tu la manges (elle s’ajoute aux plats déjà posés)' : 'Touche un repas déjà posé pour y ajouter un plat ou une note'}</span>
         </div>
       )}
 
@@ -87,7 +93,7 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
                 <button key={moment} className={c ? 'case pleine' : 'case'} disabled={passee}
                   style={{ background: c?.plaisir ? BEIGE : r ? couleurDe(r) : undefined }}
                   aria-label={`${j} ${moment} : ${texte || 'vide'}${c?.note ? ', ' + c.note : ''}`}
-                  onClick={() => (c && !choix ? setOuverte({ jour, moment, note: c.note ?? '' }) : toucherCase(jour, moment))}>
+                  onClick={() => { fermerRepas(); if (c && !choix) setOuverte({ jour, moment, note: c.note ?? '' }); else toucherCase(jour, moment); }}>
                   {texte}
                   {c?.note && <span className="note-case">{c.note}</span>}
                 </button>
@@ -99,24 +105,29 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
 
       {feuille && (
         <FeuilleChoix recettes={recettes} categories={categories} auMenu={auMenu} faites={faites}
-          choisir={(recette) => { setChoix({ recette, personnes: 1 }); setFeuille(false); }} fermer={() => setFeuille(false)} />
+          choisir={(recette) => {
+            if (feuille === 'repas' && ouverte) { if (!plats.some((p) => (recette === 'plaisir' ? p.plaisir : p.recette === recette))) toucherCase(ouverte.jour, ouverte.moment, { recette, personnes: 1 }); }
+            else setChoix({ recette, personnes: 1 });
+            setFeuille(null);
+          }} fermer={() => setFeuille(null)} />
       )}
 
       {ouverte && plats.length > 0 && (
-        <form className="carte note-repas" onSubmit={async (e) => { e.preventDefault(); await noter(ouverte.jour, ouverte.moment, ouverte.note.trim()); setOuverte(null); }}>
-          <span className="etiquette">{JOURS[ouverte.jour]} {ouverte.moment}</span>
+        <form className="carte note-repas" onSubmit={(e) => { e.preventDefault(); fermerRepas(); }}>
+          <div className="haut-repas">
+            <span className="etiquette">{JOURS[ouverte.jour]} {ouverte.moment}</span>
+            <button type="button" className="lien-bouton" onClick={fermerRepas}>Fermer</button>
+          </div>
           {plats.map((p) => (
             <div key={p.plat} className="plat-repas">
               <span>{nomPlat(p)}</span>
-              <button type="button" className="croix" aria-label={`Retirer ${nomPlat(p)} du repas`} onClick={() => enlever(ouverte.jour, ouverte.moment, p.plat)}>×</button>
+              {plats.length > 1 && <button type="button" className="lien-bouton rouge" onClick={() => enlever(ouverte.jour, ouverte.moment, p.plat)}>Retirer</button>}
             </div>
           ))}
-          <label className="champ"><span>Une note</span>
-            <input value={ouverte.note} onChange={(e) => setOuverte({ ...ouverte, note: e.target.value })} placeholder="+ 200 g haricots verts (va dans les courses)" maxLength={200} autoFocus /></label>
-          <div className="boutons">
-            <button type="button" className="secondaire" onClick={() => { toucherCase(ouverte.jour, ouverte.moment); setOuverte(null); }}>Vider la case</button>
-            <button className="principal">Enregistrer</button>
-          </div>
+          <button type="button" className="secondaire ajout-plat" onClick={() => setFeuille('repas')}>+ Ajouter un plat</button>
+          <label className="champ"><span>Une note (enregistrée toute seule)</span>
+            <input value={ouverte.note} onChange={(e) => setOuverte({ ...ouverte, note: e.target.value })} placeholder="+ 200 g haricots verts (va dans les courses)" maxLength={200} /></label>
+          <button type="button" className="lien-bouton rouge" onClick={() => { enlever(ouverte.jour, ouverte.moment); setOuverte(null); }}>Supprimer le repas</button>
         </form>
       )}
     </div>
