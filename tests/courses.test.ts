@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { afficherQty, cleLigne, listeCourses, type RecetteCourses } from '../src/lib/courses';
+import { afficherQty, cleLigne, ingredientsNote, listeCourses, type RecetteCourses } from '../src/lib/courses';
 import { parseIngredients } from '../src/lib/ingredients';
 
 const recettes = new Map<string, RecetteCourses>([
@@ -56,5 +56,17 @@ describe('liste de courses', () => {
     expect(afficherQty(1.5, 'pièce', 'œufs')).toBe('2');
     expect(afficherQty(0.5, 'gousse')).toBe('1 gousse');
     expect(afficherQty(0, '')).toBe('');
+  });
+});
+
+describe('note du repas', () => {
+  it('« + » ajouté aux courses, « sans » ignoré', () => {
+    expect(ingredientsNote('+ 200 g haricots verts, sans riz').map((i) => [i.name, i.qty, i.unit])).toEqual([['haricots verts', 200, 'g']]);
+  });
+  it('quantité de la note ajoutée telle quelle, même filtrée par plat', () => {
+    const cases = [{ recette: 'gratin', personnes: 2, note: '+ 1 oignon' }];
+    const oignons = (s?: string) => listeCourses(cases, recettes, {}, s).lignes.find((l) => l.name.startsWith('oignon'))!.qty;
+    expect(oignons()).toBe(5);
+    expect(oignons('gratin')).toBe(5);
   });
 });

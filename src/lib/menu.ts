@@ -1,6 +1,6 @@
 // Lignes Supabase du menu et des courses (voir supabase/menu.sql). `semaine` = lundi au format AAAA-MM-JJ.
 export type Moment = 'midi' | 'soir';
-export type CaseLigne = { semaine: string; jour: number; moment: Moment; recette: string | null; plaisir: boolean; personnes: number };
+export type CaseLigne = { semaine: string; jour: number; moment: Moment; recette: string | null; plaisir: boolean; personnes: number; note?: string | null };
 export type AjLigne = { semaine: string; cle: string; coche: boolean; retire: boolean; qty: number | null; ajoute: boolean; nom: string | null; unite: string | null };
 export type Choix = { recette: string | 'plaisir'; personnes: number };
 

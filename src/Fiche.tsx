@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { LogoType, Pastille } from './Carnet';
 import { ChampIngredients, Personnes } from './Ingredients';
-import { CATEGORIES, couleurDe, versTexte, type Membre, type Recette, type Statut } from './lib/carnet';
+import { couleurDe, deplacer, versTexte, type Membre, type Recette, type Statut } from './lib/carnet';
 import { afficherQty } from './lib/courses';
 import { parseIngredients } from './lib/ingredients';
+import { norm } from './lib/texte';
 
 type Props = {
-  r: Recette; membres: Membre[]; statuts: Statut[]; moi: string;
+  r: Recette; categories: string[]; membres: Membre[]; statuts: Statut[]; moi: string;
   modifier: (patch: Partial<Recette>) => Promise<void>;
   marquer: (fait: boolean) => Promise<void>;
   supprimer: () => Promise<void>;
@@ -16,7 +17,7 @@ type Props = {
   fermer: () => void;
 };
 
-export default function Fiche({ r, membres, statuts, moi, modifier, marquer, supprimer, mettreAuMenu, photo, editerIngredients, fermer }: Props) {
+export default function Fiche({ r, categories, membres, statuts, moi, modifier, marquer, supprimer, mettreAuMenu, photo, editerIngredients, fermer }: Props) {
   const [pers, setPers] = useState(r.portions);
   const [edIng, setEdIng] = useState<string | null>(editerIngredients ? versTexte(r.ingredients, r.portions) : null);
   const [edEtapes, setEdEtapes] = useState<string | null>(null);
@@ -24,6 +25,9 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   const [confirme, setConfirme] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [menuPhoto, setMenuPhoto] = useState(false);
+  const [nouvCat, setNouvCat] = useState<string | null>(null);
+  // Ligne dont le menu ⋯ (Monter / Descendre) est ouvert.
+  const [bouge, setBouge] = useState<{ liste: 'ing' | 'eta'; k: number } | null>(null);
   // Tirer la fiche vers le bas (depuis le haut, photo ou poignée) pour la fermer, au lieu de la croix.
   const [tire, setTire] = useState<{ y0: number; dy: number; t: number; v: number } | null>(null);
   const [part, setPart] = useState(false);
@@ -62,6 +66,30 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
   const fait = (m: string) => statuts.some((s) => s.recette === r.id && s.membre === m && s.valeur === 'deja_faite');
   const auteur = membres.find((m) => m.id === r.ajoutee_par);
   const etapes = r.etapes.split('\n').map((s) => s.trim()).filter(Boolean);
+  const ajouterCat = (c: string) => {
+    const nom = categories.find((x) => norm(x) === norm(c)) ?? c.trim(); // « apero » rejoint « Apéro » si elle existe
+    if (nom && !r.categories.includes(nom)) modifier({ categories: [...r.categories, nom] });
+    setNouvCat(null);
+  };
+  const points = (liste: 'ing' | 'eta', k: number, n: number) => {
+    const ouvert = bouge?.liste === liste && bouge.k === k;
+    const bouger = (sens: -1 | 1) => {
+      setBouge({ liste, k: k + sens });
+      if (liste === 'ing') modifier({ ingredients: deplacer(r.ingredients, k, sens) });
+      else modifier({ etapes: deplacer(etapes, k, sens).join('\n') });
+    };
+    return (
+      <>
+        <button className="points" aria-label="Déplacer la ligne" aria-expanded={ouvert} onClick={() => setBouge(ouvert ? null : { liste, k })}>⋯</button>
+        {ouvert && (
+          <div className="menu-points">
+            <button disabled={k === 0} onClick={() => bouger(-1)}>↑ Monter</button>
+            <button disabled={k === n - 1} onClick={() => bouger(1)}>↓ Descendre</button>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className={part ? 'voile part' : 'voile'} onClick={partir}>
@@ -130,9 +158,22 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
           )}
 
           <div className="categories enveloppe">
-            {CATEGORIES.map((c) => (
-              <button key={c} aria-pressed={r.categories.includes(c)} onClick={() => modifier({ categories: r.categories.includes(c) ? r.categories.filter((x) => x !== c) : [...r.categories, c] })}>{c}</button>
+            {r.categories.map((c) => (
+              <button key={c} aria-pressed="true" aria-label={`Retirer la catégorie ${c}`} onClick={() => modifier({ categories: r.categories.filter((x) => x !== c) })}>{c} ×</button>
             ))}
+            {nouvCat === null ? (
+              <select className="liste" value="" aria-label="Ajouter une catégorie" onChange={(e) => (e.target.value === '__nouvelle' ? setNouvCat('') : ajouterCat(e.target.value))}>
+                <option value="">+ Catégorie</option>
+                {categories.filter((c) => !r.categories.includes(c)).map((c) => <option key={c}>{c}</option>)}
+                <option value="__nouvelle">Nouvelle catégorie…</option>
+              </select>
+            ) : (
+              <form className="nouvelle-cat" onSubmit={(e) => { e.preventDefault(); ajouterCat(nouvCat); }}>
+                <input value={nouvCat} onChange={(e) => setNouvCat(e.target.value)} placeholder="Apéro, batch…" aria-label="Nom de la nouvelle catégorie" autoFocus />
+                <button type="button" className="secondaire" onClick={() => setNouvCat(null)}>Annuler</button>
+                <button className="principal">OK</button>
+              </form>
+            )}
           </div>
 
           <section className="bloc">
@@ -149,7 +190,7 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
                 <div className="ligne-titre"><h3>Ingrédients</h3>{r.ingredients.length > 0 && <Personnes n={pers} setN={setPers} />}</div>
                 {r.ingredients.length ? (
                   <ul className="ingredients">
-                    {r.ingredients.map((i, k) => <li key={k} style={{ animationDelay: `${Math.min(k, 12) * 60}ms` }}><span>{i.name}</span><span>{afficherQty(i.qty * pers, i.unit, i.name)}</span></li>)}
+                    {r.ingredients.map((i, k) => <li key={k} style={{ animationDelay: `${Math.min(k, 12) * 60}ms` }}><span>{i.name}</span><span className="qte">{afficherQty(i.qty * pers, i.unit, i.name)}</span>{points('ing', k, r.ingredients.length)}</li>)}
                   </ul>
                 ) : (
                   <div className="alerte">Pas encore d'ingrédients. Ajoute-les d'un trait (« 250 g ricotta, 1 paquet ravioles ») pour qu'ils aillent dans la liste de courses.</div>
@@ -172,7 +213,7 @@ export default function Fiche({ r, membres, statuts, moi, modifier, marquer, sup
               </>
             ) : (
               <>
-                {etapes.length > 0 && <ol className="etapes">{etapes.map((s, k) => <li key={k}><span style={{ background: couleurDe(r) }}>{k + 1}</span>{s}</li>)}</ol>}
+                {etapes.length > 0 && <ol className="etapes">{etapes.map((s, k) => <li key={k}><span style={{ background: couleurDe(r) }}>{k + 1}</span><p>{s}</p>{points('eta', k, etapes.length)}</li>)}</ol>}
                 <button className="pointilles" onClick={() => setEdEtapes(r.etapes)}>+ Ajouter ou modifier une étape</button>
               </>
             )}

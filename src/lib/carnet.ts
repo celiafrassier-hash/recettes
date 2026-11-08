@@ -53,3 +53,18 @@ export function resume(r: Recette): string {
 export function versTexte(ing: Ingredient[], pour: number): string {
   return ing.map((i) => [afficherQty(i.qty * pour, i.unit, i.name), i.name].filter(Boolean).join(' ')).join('\n');
 }
+
+// Catégories proposées : celles de base, puis celles ajoutées à la main (carnet ou recettes), par ordre alphabétique.
+export function toutesCategories(recettes: Recette[], creees: string[] = []): string[] {
+  const plus = new Set([...creees, ...recettes.flatMap((r) => r.categories)].filter((c) => !CATEGORIES.includes(c)));
+  return [...CATEGORIES, ...[...plus].sort((a, b) => a.localeCompare(b, 'fr'))];
+}
+
+// Monte (-1) ou descend (+1) l'élément k d'une liste ; rien ne bouge au bord.
+export function deplacer<T>(l: T[], k: number, sens: -1 | 1): T[] {
+  const j = k + sens;
+  if (j < 0 || j >= l.length) return l;
+  const copie = [...l];
+  [copie[k], copie[j]] = [copie[j], copie[k]];
+  return copie;
+}

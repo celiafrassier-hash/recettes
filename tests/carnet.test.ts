@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chercher, couleurDe, resume, versTexte, type Recette } from '../src/lib/carnet';
+import { chercher, couleurDe, deplacer, resume, toutesCategories, versTexte, type Recette } from '../src/lib/carnet';
 import { parseIngredients } from '../src/lib/ingredients';
 
 const r = (o: Partial<Recette>): Recette => ({
@@ -51,5 +51,20 @@ describe('photo', () => {
     expect(taille(4000, 3000)).toEqual({ l: 1000, h: 750 });
     expect(taille(3000, 4000)).toEqual({ l: 750, h: 1000 });
     expect(taille(800, 600)).toEqual({ l: 800, h: 600 });
+  });
+});
+
+describe('ordre et catégories', () => {
+  it('monter, descendre, rien au bord', () => {
+    expect(deplacer(['a', 'b', 'c'], 1, -1)).toEqual(['b', 'a', 'c']);
+    expect(deplacer(['a', 'b', 'c'], 1, 1)).toEqual(['a', 'c', 'b']);
+    expect(deplacer(['a', 'b'], 0, -1)).toEqual(['a', 'b']);
+    expect(deplacer(['a', 'b'], 1, 1)).toEqual(['a', 'b']);
+  });
+  it('catégories ajoutées à la main, après celles de base, sans doublon', () => {
+    const l = toutesCategories([r({ categories: ['Apéro', 'Poulet'] }), r({ id: 'x', categories: ['Apéro', 'Batch'] })]);
+    expect(l.slice(-2)).toEqual(['Apéro', 'Batch']);
+    expect(l.filter((c) => c === 'Poulet')).toHaveLength(1);
+    expect(toutesCategories([], ['Apéro', 'Poulet']).filter((c) => c === 'Apéro' || c === 'Poulet')).toEqual(['Poulet', 'Apéro']);
   });
 });

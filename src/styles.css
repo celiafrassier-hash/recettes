@@ -55,6 +55,8 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .categories.enveloppe { flex-wrap: wrap; overflow: visible; }
 .categories button { flex: none; height: 40px; padding: 0 16px; border-radius: 20px; border: 0; cursor: pointer; background: #dce3d6; color: var(--encre); font-size: 14px; font-weight: 600; }
 .categories button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.categories button.toutes { background: var(--encre); color: #fff; }
+.categories button.nouvelle { background: transparent; border: 1.5px dashed var(--accent); color: var(--accent); }
 .grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .recette { border: 0; padding: 0; text-align: left; cursor: pointer; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 1px 2px rgba(31, 42, 36, 0.08); display: flex; flex-direction: column; color: var(--encre); font: inherit; }
 .visuel { height: 104px; position: relative; display: flex; align-items: flex-end; padding: 10px; }
@@ -85,9 +87,7 @@ h3 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weigh
 .semaine > span { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 15px; }
 .demande { display: flex; flex-direction: column; gap: 10px; }
 .choix-recette { display: flex; flex-direction: column; gap: 8px; }
-.pastilles { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 14px; scrollbar-width: thin; }
-.pastilles button { flex: none; height: 40px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; border: 1.5px solid var(--trait); background: #fff; color: var(--encre); }
-.pastilles button[aria-pressed="true"] { border-color: var(--encre); border-width: 2px; }
+.note-case { display: block; margin-top: 3px; font-weight: 500; font-size: 11px; opacity: 0.8; }
 .grille-menu { display: grid; grid-template-columns: 44px repeat(2, minmax(0, 1fr)); gap: 6px; }
 .jour { display: contents; }
 .nom-jour { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 15px; display: flex; align-items: center; }
@@ -157,9 +157,24 @@ input.qty { width: 90px; border: 1.5px solid var(--encre); border-radius: 10px; 
 .bloc { display: flex; flex-direction: column; gap: 10px; }
 .ingredients { list-style: none; margin: 0; padding: 0; }
 .ingredients li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef1ec; font-size: 15px; }
-.ingredients li span:last-child { flex: none; color: var(--doux); font-weight: 600; }
+.ingredients li { position: relative; align-items: center; }
+.ingredients li span:first-child { flex: 1; }
+.ingredients li .qte { flex: none; color: var(--doux); font-weight: 600; }
 .etapes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .etapes li { display: flex; gap: 12px; font-size: 15px; line-height: 1.45; }
+.etapes li { position: relative; }
+.etapes li p { margin: 0; flex: 1; }
+.points { flex: none; width: 32px; height: 32px; margin: -4px -6px -4px 0; border: 0; border-radius: 16px; background: transparent; color: var(--doux); font-size: 20px; line-height: 1; cursor: pointer; }
+.points[aria-expanded="true"] { background: #eef1ec; }
+.menu-points { position: absolute; right: 0; top: calc(100% - 4px); z-index: 3; display: flex; flex-direction: column; min-width: 150px; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(31, 42, 36, 0.18); overflow: hidden; }
+.menu-points button { min-height: 44px; padding: 0 16px; border: 0; background: #fff; text-align: left; font-size: 15px; font-weight: 600; color: var(--encre); cursor: pointer; font-family: inherit; }
+.menu-points button + button { border-top: 1px solid #eef1ec; }
+.menu-points button:disabled { color: #b5bdb2; cursor: default; }
+.liste { height: 44px; border-radius: 22px; border: 1.5px solid #c9d0c6; background: #fff; padding: 0 14px; font-size: 15px; font-weight: 600; color: var(--encre); font-family: inherit; max-width: 100%; }
+.choix-recette .liste { width: 100%; margin-bottom: 4px; }
+.nouvelle-cat { display: flex; gap: 8px; width: 100%; }
+.nouvelle-cat input { flex: 1; min-width: 0; height: 44px; border-radius: 14px; border: 1.5px solid var(--encre); padding: 0 12px; font-size: 16px; font-family: inherit; }
+.nouvelle-cat button { flex: none; height: 44px; padding: 0 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
 .etapes li span { flex: none; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
 .pointilles { min-height: 44px; border-radius: 12px; border: 1.5px dashed #9aa596; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--encre); }
 .plein { height: 52px; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }

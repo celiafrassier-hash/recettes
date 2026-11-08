@@ -53,7 +53,7 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
   const [corrige, setCorrige] = useState<{ cle: string; texte: string } | null>(null);
   const parId = new Map(recettes.map((r) => [r.id, { id: r.id, name: r.nom, ing: r.ingredients }]));
   const aj: Record<string, Ajustement> = Object.fromEntries(ajustements.map((a) => [a.cle, a]));
-  const menu = cases.map((c) => ({ recette: c.plaisir ? 'plaisir' : c.recette!, personnes: c.personnes }));
+  const menu = cases.map((c) => ({ recette: c.plaisir ? 'plaisir' : c.recette!, personnes: c.personnes, note: c.note }));
   const { lignes, sansIngredients } = listeCourses(menu, parId, aj, seul ?? undefined);
   const plats = [...portions(menu)].map(([id, n]) => ({ r: recettes.find((x) => x.id === id), n })).filter((p) => p.r);
   const retires = ajustements.filter((a) => a.retire);
