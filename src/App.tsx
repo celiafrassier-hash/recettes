@@ -106,7 +106,7 @@ export default function App() {
       supabase.from('membre').select('id, prenom, initiale, email'),
       supabase.from('recette').select('*').order('creee_le', { ascending: false }),
       supabase.from('statut').select('*'),
-      supabase.from('case_menu').select('semaine, jour, moment, recette, plaisir, personnes, note'),
+      supabase.from('case_menu').select('semaine, jour, moment, plat, recette, plaisir, personnes, note'),
       supabase.from('ajustement').select('semaine, cle, coche, retire, qty, ajoute, nom, unite'),
       supabase.from('categorie').select('nom').order('nom'),
       supabase.from('rayon_aliment').select('cle, rayon'),
@@ -231,22 +231,27 @@ export default function App() {
   }
 
   async function toucherCase(jour: number, moment: Moment) {
-    const actuelle = d!.cases.find((c) => c.semaine === sem && c.jour === jour && c.moment === moment);
-    const action = toucher(actuelle, choix);
-    if (action === 'rien') return setMessage('Choisis d’abord une recette dans la rangée');
-    const autres = (x: Donnees) => x.cases.filter((c) => !(c.semaine === sem && c.jour === jour && c.moment === moment));
-    if (action === 'vider') {
-      const { error } = await supabase.from('case_menu').delete().match({ semaine: sem, jour, moment });
-      if (error) return setMessage(ERREUR);
-      return maj((x) => ({ ...x, cases: autres(x) }));
-    }
+    const repas = d!.cases.filter((c) => c.semaine === sem && c.jour === jour && c.moment === moment);
+    const geste = toucher(repas, choix);
+    if (geste.action === 'rien') return setMessage('Choisis d’abord une recette dans la rangée');
+    if (geste.action === 'vider') return enlever(jour, moment);
+    if (geste.action === 'retirer') return enlever(jour, moment, geste.plat);
     const plaisir = choix!.recette === 'plaisir';
-    const ligne: CaseLigne = { semaine: sem, jour, moment, recette: plaisir ? null : choix!.recette, plaisir, personnes: choix!.personnes, note: null };
+    // La note est celle du repas : un plat ajouté la reprend.
+    const ligne: CaseLigne = { semaine: sem, jour, moment, plat: geste.plat, recette: plaisir ? null : choix!.recette, plaisir, personnes: choix!.personnes, note: repas[0]?.note ?? null };
     const { error } = await supabase.from('case_menu').upsert(ligne);
     if (error) return setMessage(ERREUR);
-    maj((x) => ({ ...x, cases: [...autres(x), ligne] }));
+    maj((x) => ({ ...x, cases: [...x.cases.filter((c) => !(c.semaine === sem && c.jour === jour && c.moment === moment && c.plat === geste.plat)), ligne] }));
     const r = recettes.find((x) => x.id === ligne.recette);
     if (r && !r.ingredients.length) setDemande(r.id);
+  }
+
+  // Retire un plat du repas, ou tout le repas si aucun plat n'est donné.
+  async function enlever(jour: number, moment: Moment, plat?: number) {
+    const cible = plat === undefined ? { semaine: sem, jour, moment } : { semaine: sem, jour, moment, plat };
+    const { error } = await supabase.from('case_menu').delete().match(cible);
+    if (error) return setMessage(ERREUR);
+    maj((x) => ({ ...x, cases: x.cases.filter((c) => !(c.semaine === sem && c.jour === jour && c.moment === moment && (plat === undefined || c.plat === plat))) }));
   }
 
   // Rayon choisi à la main pour un aliment (commun : le jambon cru est au même rayon pour tout le monde).
@@ -327,8 +332,10 @@ export default function App() {
   const auj = new Date();
   const jourAuj = (auj.getDay() + 6) % 7;
   const repas = (['midi', 'soir'] as Moment[]).map((moment) => {
-    const c = d?.cases.find((x) => x.semaine === cleSemaine(lundiDe(auj)) && x.jour === jourAuj && x.moment === moment);
-    return { moment, c, r: recettes.find((x) => x.id === c?.recette) };
+    const plats = (d?.cases ?? []).filter((x) => x.semaine === cleSemaine(lundiDe(auj)) && x.jour === jourAuj && x.moment === moment).sort((x, y) => x.plat - y.plat);
+    const noms = plats.map((x) => (x.plaisir ? 'Plaisir · on improvise' : recettes.find((y) => y.id === x.recette)?.nom)).filter(Boolean);
+    const c = plats[0];
+    return { moment, c, noms: noms.join(' + '), r: recettes.find((x) => x.id === plats.find((y) => y.recette)?.recette) };
   });
 
   const titre = { carnet: 'Popote', menu: 'Mon menu', courses: 'Mes courses' }[onglet];
@@ -359,12 +366,12 @@ export default function App() {
               )}
               <section className="aujourdhui">
                 <span className="etiquette">Aujourd'hui · {JOURS_LONGS[jourAuj]}</span>
-                {repas.map(({ moment, c, r }) => (
+                {repas.map(({ moment, c, noms, r }) => (
                   <button key={moment} onClick={() => (r ? setOuverte({ id: r.id }) : setOnglet('menu'))}>
                     <span className="pave" style={{ background: c?.plaisir ? '#F6E7C8' : r ? couleurDe(r) : 'rgba(255,255,255,0.12)' }} />
                     <span>
                       <span className="quand">{moment === 'midi' ? 'Ce midi' : 'Ce soir'}</span>
-                      <span className="quoi">{c?.plaisir ? 'Plaisir · on improvise' : r ? r.nom : 'Rien de prévu'}{c?.note ? ` · ${c.note}` : ''}</span>
+                      <span className="quoi">{noms || 'Rien de prévu'}{c?.note ? ` · ${c.note}` : ''}</span>
                     </span>
                   </button>
                 ))}
@@ -375,7 +382,7 @@ export default function App() {
             </>
           )}
           {onglet === 'menu' && (
-            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} categories={d.categories ?? []} faites={new Set(d.statuts.filter((s) => s.membre === moi.id && s.valeur === 'deja_faite').map((s) => s.recette))} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter}
+            <Menu semaine={semaine} changerSemaine={changerSemaine} cases={casesSemaine} recettes={recettes} categories={d.categories ?? []} faites={new Set(d.statuts.filter((s) => s.membre === moi.id && s.valeur === 'deja_faite').map((s) => s.recette))} choix={choix} setChoix={setChoix} toucherCase={toucherCase} noter={noter} enlever={enlever}
               demande={recettes.find((r) => r.id === demande) ?? null}
               ajouterIngredients={() => { setOuverte({ id: demande!, ingredients: true }); setDemande(null); }} plusTard={() => setDemande(null)} />
           )}

@@ -57,7 +57,8 @@ export default function Courses({ semaine, changerSemaine, cases, recettes, ajus
   const [corrige, setCorrige] = useState<{ cle: string; texte: string } | null>(null);
   const parId = new Map(recettes.map((r) => [r.id, { id: r.id, name: r.nom, ing: r.ingredients }]));
   const aj: Record<string, Ajustement> = Object.fromEntries(ajustements.map((a) => [a.cle, a]));
-  const menu = cases.map((c) => ({ recette: c.plaisir ? 'plaisir' : c.recette!, personnes: c.personnes, note: c.note }));
+  // Tous les plats d'un repas portent sa note : elle ne compte qu'une fois, sur le premier plat.
+  const menu = cases.map((c) => ({ recette: c.plaisir ? 'plaisir' : c.recette!, personnes: c.personnes, note: cases.find((x) => x.jour === c.jour && x.moment === c.moment) === c ? c.note : null }));
   const res = listeCourses(menu, parId, aj, seul ?? undefined);
   const sansIngredients = res.sansIngredients;
   const lignes = res.lignes.map((l) => ({ ...l, rayon: rayons[norm(l.name)] ?? l.rayon }));

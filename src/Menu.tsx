@@ -11,6 +11,7 @@ type Props = {
   choix: Choix | null; setChoix: (c: Choix | null) => void;
   toucherCase: (jour: number, moment: Moment) => void;
   noter: (jour: number, moment: Moment, note: string) => Promise<void>;
+  enlever: (jour: number, moment: Moment, plat?: number) => Promise<void>;
   demande: Recette | null; ajouterIngredients: () => void; plusTard: () => void;
 };
 
@@ -21,7 +22,7 @@ export function nomSemaine(lundi: Date): string {
   return ecart === 0 ? 'Cette semaine' : ecart === 1 ? 'Semaine prochaine' : ecart === -1 ? 'Semaine dernière' : ecart > 0 ? `Dans ${ecart} semaines` : `Il y a ${-ecart} semaines`;
 }
 
-export default function Menu({ semaine, changerSemaine, cases, recettes, categories, faites, choix, setChoix, toucherCase, noter, demande, ajouterIngredients, plusTard }: Props) {
+export default function Menu({ semaine, changerSemaine, cases, recettes, categories, faites, choix, setChoix, toucherCase, noter, enlever, demande, ajouterIngredients, plusTard }: Props) {
   const passee = semaine < lundiDe(new Date());
   const nom = (id: string | null) => recettes.find((r) => r.id === id);
   // Recettes déjà au menu cette semaine d'abord, puis le reste du carnet par ordre alphabétique.
@@ -30,7 +31,10 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
   const choisie = choix && choix.recette !== 'plaisir' ? nom(choix.recette) : undefined;
   // Case pleine touchée sans recette choisie : on ouvre sa note (« + légumes ») au lieu de la vider.
   const [ouverte, setOuverte] = useState<{ jour: number; moment: Moment; note: string } | null>(null);
-  const caseDe = (jour: number, moment: Moment) => cases.find((x) => x.jour === jour && x.moment === moment);
+  // Un repas = un ou plusieurs plats (poulet moutarde + purée), dans l'ordre où on les a posés.
+  const repasDe = (jour: number, moment: Moment) => cases.filter((x) => x.jour === jour && x.moment === moment).sort((a, b) => a.plat - b.plat);
+  const nomPlat = (c: CaseLigne) => (c.plaisir ? 'Plaisir' : nom(c.recette)?.nom ?? '') + (c.personnes > 1 ? ` · ${c.personnes} pers.` : '');
+  const plats = ouverte ? repasDe(ouverte.jour, ouverte.moment) : [];
 
   return (
     <div className="menu">
@@ -63,7 +67,7 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
           ) : (
             <button className="principal plein choisir" onClick={() => { setOuverte(null); setFeuille(true); }}>+ Choisir une recette</button>
           )}
-          <span className="petit centre">{choix ? 'Touche les cases où tu la manges' : 'Touche un repas déjà posé pour y ajouter une note'}</span>
+          <span className="petit centre">{choix ? 'Touche les repas où tu la manges (elle s’ajoute aux plats déjà posés)' : 'Touche un repas déjà posé pour y ajouter une note'}</span>
         </div>
       )}
 
@@ -75,9 +79,10 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
           <div key={j} className="jour">
             <span className="nom-jour">{j}</span>
             {(['midi', 'soir'] as Moment[]).map((moment) => {
-              const c = caseDe(jour, moment);
+              const repas = repasDe(jour, moment);
+              const c = repas[0];
               const r = c && nom(c.recette);
-              const texte = c?.plaisir ? 'Plaisir' : r ? r.nom + (c!.personnes > 1 ? ` · ${c!.personnes} pers.` : '') : '';
+              const texte = repas.map(nomPlat).join(' + ');
               return (
                 <button key={moment} className={c ? 'case pleine' : 'case'} disabled={passee}
                   style={{ background: c?.plaisir ? BEIGE : r ? couleurDe(r) : undefined }}
@@ -97,9 +102,16 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
           choisir={(recette) => { setChoix({ recette, personnes: 1 }); setFeuille(false); }} fermer={() => setFeuille(false)} />
       )}
 
-      {ouverte && caseDe(ouverte.jour, ouverte.moment) && (
+      {ouverte && plats.length > 0 && (
         <form className="carte note-repas" onSubmit={async (e) => { e.preventDefault(); await noter(ouverte.jour, ouverte.moment, ouverte.note.trim()); setOuverte(null); }}>
-          <label className="champ"><span>{JOURS[ouverte.jour]} {ouverte.moment} : une note</span>
+          <span className="etiquette">{JOURS[ouverte.jour]} {ouverte.moment}</span>
+          {plats.map((p) => (
+            <div key={p.plat} className="plat-repas">
+              <span>{nomPlat(p)}</span>
+              <button type="button" className="croix" aria-label={`Retirer ${nomPlat(p)} du repas`} onClick={() => enlever(ouverte.jour, ouverte.moment, p.plat)}>×</button>
+            </div>
+          ))}
+          <label className="champ"><span>Une note</span>
             <input value={ouverte.note} onChange={(e) => setOuverte({ ...ouverte, note: e.target.value })} placeholder="+ 200 g haricots verts (va dans les courses)" maxLength={200} autoFocus /></label>
           <div className="boutons">
             <button type="button" className="secondaire" onClick={() => { toucherCase(ouverte.jour, ouverte.moment); setOuverte(null); }}>Vider la case</button>
