@@ -57,8 +57,10 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
     return () => el?.removeEventListener('touchmove', bloquer);
   }, []);
   const lacher = () => { clearTimeout(minuteur.current); leve.current = false; setTenu(null); };
-  const placeSous = (x: number, y: number): Place | null => {
+  // La case tenue suit le doigt : on la saute, sinon elle se trouverait elle-même (vers le bas, elle passe avant les autres).
+  const placeSous = (x: number, y: number, tenue: Place): Place | null => {
     const el = [...grille.current!.querySelectorAll<HTMLElement>('[data-jour]')].find((c) => {
+      if (Number(c.dataset.jour) === tenue.jour && c.dataset.moment === tenue.moment) return false;
       const b = c.getBoundingClientRect();
       return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom;
     });
@@ -82,7 +84,7 @@ export default function Menu({ semaine, changerSemaine, cases, recettes, categor
       const dx = e.clientX - tenu.x0, dy = e.clientY - tenu.y0;
       // Le doigt bouge avant l'appui long : c'est la page qu'on fait défiler.
       if (!tenu.leve) { if (Math.hypot(dx, dy) > 10) lacher(); return; }
-      setTenu({ ...tenu, dx, dy, cible: placeSous(e.clientX, e.clientY) });
+      setTenu({ ...tenu, dx, dy, cible: placeSous(e.clientX, e.clientY, tenu) });
     },
     onPointerUp: () => {
       if (tenu?.leve) {
